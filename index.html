@@ -777,12 +777,29 @@ function renderCharts(){
 
   svgDraw('gTrend', (s, W, H) => {
     if (!rs.length){ s.innerHTML = '<text x="'+W/2+'" y="'+H/2+'" text-anchor="middle" fill="currentColor" font-size="14">Sin datos en este periodo</text>'; return; }
-    const L = 38, R = 10, T = 10, B = 26, x0 = Date.now()-days*DAY, x1 = Date.now();
-    const X = t => L + (t-x0)/(x1-x0)*(W-L-R), Y = v => T + (1 - (Math.min(Math.max(v,40),400)-40)/360)*(H-T-B);
+    const L = 38, R = 14, T = 22, B = 26;
+    // Fechas: de la primera a la última lectura del periodo (con un pequeño margen)
+    let x0 = rs[0].t, x1 = rs[rs.length-1].t;
+    if (x1 - x0 < 6*3600e3){ x0 -= 6*3600e3; x1 += 6*3600e3; }
+    const padT = (x1 - x0) * 0.03; x0 -= padT; x1 += padT;
+    // Valores: rango ajustado a tus lecturas, siempre mostrando 70, 180 y 250
+    const vMin = Math.min(...rs.map(r=>r.v)), vMax = Math.max(...rs.map(r=>r.v));
+    const lo = Math.max(40, Math.floor((Math.min(70, vMin) - 15)/10)*10), hi = Math.min(400, Math.ceil((Math.max(250, vMax) + 25)/10)*10);
+    const X = t => L + (t-x0)/(x1-x0)*(W-L-R), Y = v => T + (1 - (Math.min(Math.max(v,lo),hi)-lo)/(hi-lo))*(H-T-B);
     let g = '<rect x="'+L+'" y="'+Y(180)+'" width="'+(W-L-R)+'" height="'+(Y(70)-Y(180))+'" fill="var(--band)"/>';
-    for (const v of [70,180,250]) g += '<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="var(--line)" stroke-dasharray="'+(v===250?'4 4':'0')+'"/><text x="'+(L-6)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="12" fill="var(--soft)">'+v+'</text>';
-    const step = W < 520 ? Math.ceil(days/4) : Math.ceil(days/7);
-    for (let i=days; i>=0; i-=step){ const t = x1 - i*DAY; g += '<text x="'+X(t)+'" y="'+(H-6)+'" text-anchor="middle" font-size="12" fill="var(--soft)">'+new Date(t).toLocaleDateString('es-MX',{day:'numeric',month:'short'})+'</text>'; }
+    const yt = [70,180,250].concat(hi >= 330 ? [300] : []);
+    for (const v of yt) g += '<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="var(--line)" stroke-dasharray="'+(v>=250?'4 4':'0')+'"/><text x="'+(L-6)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="12" fill="var(--soft)">'+v+'</text>';
+    // Marcas de fecha repartidas entre la primera y la última lectura
+    const span = rs[rs.length-1].t - rs[0].t, nT = W < 520 ? 4 : 6;
+    const fmtX = t => span < 2*DAY ? fmtT(t) : new Date(t).toLocaleDateString('es-MX',{day:'numeric',month:'short'});
+    let lastLbl = '';
+    for (let i = 0; i < nT; i++){
+      const t = rs[0].t + (span || 0) * (nT === 1 ? 0 : i/(nT-1)), lbl = fmtX(t);
+      if (lbl === lastLbl) continue; lastLbl = lbl;
+      const anchor = i === 0 ? 'start' : i === nT-1 ? 'end' : 'middle';
+      g += '<text x="'+X(t).toFixed(1)+'" y="'+(H-6)+'" text-anchor="'+anchor+'" font-size="12" fill="var(--soft)">'+lbl+'</text>';
+      if (span === 0) break;
+    }
     // Línea continua y suave que une todas las lecturas (curva monótona, sin picos falsos)
     const P = rs.map(r => [X(r.t), Y(r.v)]);
     let d = 'M' + P[0][0].toFixed(1) + ',' + P[0][1].toFixed(1);
@@ -797,9 +814,9 @@ function renderCharts(){
         d += 'C' + (P[i][0]+dx).toFixed(1) + ',' + (P[i][1]+m[i]*dx).toFixed(1) + ' ' + (P[i+1][0]-dx).toFixed(1) + ',' + (P[i+1][1]-m[i+1]*dx).toFixed(1) + ' ' + P[i+1][0].toFixed(1) + ',' + P[i+1][1].toFixed(1);
       }
     }
-    const baseY = Y(40), last = P[P.length-1], lr = rs[rs.length-1];
+    const baseY = Y(lo), last = P[P.length-1], lr = rs[rs.length-1];
     // Degradado vertical con cortes exactos en 70, 180 y 250: cada tramo de la línea toma el color de su zona
-    const y70 = Y(70), y180 = Y(180), y250 = Y(250), top = Y(400), bot = Y(40);
+    const y70 = Y(70), y180 = Y(180), y250 = Y(250), top = Y(hi), bot = Y(lo);
     const st = (y, c) => '<stop offset="'+(((y-top)/(bot-top))*100).toFixed(2)+'%" stop-color="'+c+'"/>';
     g += '<defs><linearGradient id="gZone" gradientUnits="userSpaceOnUse" x1="0" y1="'+top+'" x2="0" y2="'+bot+'">'+
       st(top,'var(--alert)')+st(y250,'var(--alert)')+st(y250,'var(--warn)')+st(y180,'var(--warn)')+st(y180,'var(--aqua)')+st(y70,'var(--aqua)')+st(y70,'var(--alert)')+st(bot,'var(--alert)')+
@@ -814,7 +831,7 @@ function renderCharts(){
   const half = rs.length >= 6 ? [avg(rs.slice(0, rs.length/2|0)), avg(rs.slice(rs.length/2|0))] : null;
   $('#iTrend').textContent = !rs.length ? '' : half ? (half[1] < half[0]-5 ? 'Tu glucosa va a la baja en este periodo: '+Math.round(half[0])+' → '+Math.round(half[1])+' mg/dL de promedio. ¡Buen avance!' : half[1] > half[0]+5 ? 'Tu promedio subió de '+Math.round(half[0])+' a '+Math.round(half[1])+' mg/dL. Revisa qué cambió en tu comida, horarios o medicamentos.' : 'Tu glucosa se mantiene estable alrededor de '+Math.round(a)+' mg/dL.') : 'Registra más lecturas para ver la tendencia.';
 
-  const bands = [['Muy baja <54',r=>r.v<54,'#B8443B'],['Baja 54–69',r=>r.v>=54&&r.v<70,'var(--alert)'],['En rango 70–180',r=>r.v>=70&&r.v<=180,'var(--aqua)'],['Alta 181–250',r=>r.v>180&&r.v<=250,'var(--warn)'],['Muy alta >250',r=>r.v>250,'var(--navy)']];
+  const bands = [['Muy baja <54',r=>r.v<54,'#9E2F27'],['Baja 54–69',r=>r.v>=54&&r.v<70,'var(--alert)'],['En rango 70–180',r=>r.v>=70&&r.v<=180,'var(--aqua)'],['Alta 181–250',r=>r.v>180&&r.v<=250,'var(--warn)'],['Muy alta >250',r=>r.v>250,'var(--alert)']];
   const pc = bands.map(b => rs.length ? rs.filter(b[1]).length/rs.length*100 : 0);
   $('#tirBar').innerHTML = rs.length ? bands.map((b,i)=>pc[i]?'<div style="width:'+pc[i]+'%;background:'+b[2]+'" title="'+b[0]+'"></div>':'').join('') : '<div style="width:100%;background:var(--band)"></div>';
   $('#tirLeg').innerHTML = bands.map((b,i)=>'<span style="--c:'+b[2]+'">'+b[0]+': '+Math.round(pc[i])+' %</span>').join('');
@@ -827,16 +844,19 @@ function renderCharts(){
   $('#iTime').textContent = worst ? 'Tu horario más alto es la '+worst.n.split(' ')[0].toLowerCase()+' ('+Math.round(worst.a)+' mg/dL). Enfoca ahí tus cambios: porción, tipo de comida o caminar después.' : '';
 
   svgDraw('gDaily', (s, W, H) => {
-    const n = Math.min(days, 30), L = 34, B = 22, T = 8;
-    const ds = Array.from({length:n}, (_,i) => { const k = dKey(Date.now()-(n-1-i)*DAY); const e = (S.days[k]&&S.days[k].entries)||[]; return {k, a:avg(e)}; });
+    if (!rs.length){ s.innerHTML = '<text x="'+W/2+'" y="'+H/2+'" text-anchor="middle" fill="var(--soft)" font-size="14">Sin datos en este periodo</text>'; return; }
+    const first = new Date(rs[0].t); first.setHours(0,0,0,0);
+    const lastD = new Date(rs[rs.length-1].t); lastD.setHours(0,0,0,0);
+    const n = Math.max(1, Math.min(30, Math.round((lastD - first)/DAY) + 1)), L = 34, B = 22, T = 8;
+    const ds = Array.from({length:n}, (_,i) => { const k = dKey(lastD.getTime() - (n-1-i)*DAY + 12*3600e3); const e = (S.days[k]&&S.days[k].entries)||[]; return {k, a:avg(e)}; });
     const Y = v => T + (1 - Math.min(v,350)/350)*(H-T-B), bw = (W-L-6)/n;
     let g = '<line x1="'+L+'" x2="'+W+'" y1="'+Y(180)+'" y2="'+Y(180)+'" stroke="var(--alert)" stroke-dasharray="4 4"/><text x="'+(L-4)+'" y="'+(Y(180)+4)+'" text-anchor="end" font-size="12" fill="var(--soft)">180</text>';
     ds.forEach((d,i) => { if (d.a==null) return; const c = d.a<=180?'var(--aqua)':d.a<=250?'var(--warn)':'var(--alert)'; g += '<rect x="'+(L+i*bw+bw*.15).toFixed(1)+'" y="'+Y(d.a).toFixed(1)+'" width="'+(bw*.7).toFixed(1)+'" height="'+(Y(0)-Y(d.a)).toFixed(1)+'" rx="3" fill="'+c+'"><title>'+fmtD(d.k)+': '+Math.round(d.a)+' mg/dL</title></rect>'; });
     const lab = W < 520 ? Math.ceil(n/4) : Math.ceil(n/8);
-    ds.forEach((d,i) => { if ((n-1-i)%lab===0) g += '<text x="'+(L+i*bw+bw/2).toFixed(1)+'" y="'+(H-5)+'" text-anchor="middle" font-size="12" fill="var(--soft)">'+Number(d.k.slice(8))+'</text>'; });
+    ds.forEach((d,i) => { if ((n-1-i)%lab===0) g += '<text x="'+(L+i*bw+bw/2).toFixed(1)+'" y="'+(H-5)+'" text-anchor="middle" font-size="12" fill="var(--soft)">'+(n <= 10 || i===0 || d.k.slice(8)==='01' ? new Date(+d.k.slice(0,4), +d.k.slice(5,7)-1, +d.k.slice(8)).toLocaleDateString('es-MX',{day:'numeric',month:'short'}) : Number(d.k.slice(8)))+'</text>'; });
     s.innerHTML = g;
   });
-  const dd = Array.from({length:Math.min(days,30)},(_,i)=>avg((S.days[dKey(Date.now()-i*DAY)]||{}).entries||[])).filter(x=>x!=null);
+  const dd = [...new Set(rs.map(r=>dKey(r.t)))].map(k=>avg(S.days[k].entries.filter(r=>r.t >= Date.now()-days*DAY)));
   $('#iDaily').textContent = dd.length ? dd.filter(x=>x<=180).length+' de '+dd.length+' días con promedio en meta (180 o menos).' : '';
 }
 function renderAll(){ renderHome(); renderList(); renderMeds(); renderProfile(); if (location.hash==='#graficas') renderCharts(); }
