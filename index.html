@@ -17,158 +17,210 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* VOICE: calma clínica, motivadora, nunca regañona.
-   IDEA: un glucómetro de bolsillo: la última lectura grande, como la pantalla del medidor.
-   PICTURE: tarjeta azul marino con la cifra enorme y una escala de rangos debajo.
-   COLOUR and TYPE: paleta del usuario — marino #0E1A4F, petróleo #3A8290, turquesa #5EB3BE, hielo #EAF2F4; coral solo para alertas. Manrope.
-   LAYOUT: app móvil, barra inferior con 4 secciones, contenido en una columna de 720px. */
+/* Mi Glucosa · sistema visual
+   Paleta: marino #0E1A4F, petróleo #3A8290, turquesa #5EB3BE, hielo #EAF2F4; coral y ámbar solo para estados.
+   Espaciado base 4 px: 8 · 12 · 16 · 20 · 24. Radios: 20 tarjetas, 14 controles. Tipografía Manrope. */
 :root{color-scheme:light dark;
 --navy:#0E1A4F;--teal:#3A8290;--aqua:#5EB3BE;--ice:#EAF2F4;--alert:#E0655A;--warn:#E6A23C;
---bg:light-dark(#EAF2F4,#081236);--card:light-dark(#FFFFFF,#111E58);--ink:light-dark(#0E1A4F,#EAF2F4);
---soft:light-dark(#4F6178,#A9C3CC);--line:light-dark(#D3E2E7,#24357A);--band:light-dark(#D4EBEE,#16306A)}
+--bg:light-dark(#EEF4F6,#070F2E);--card:light-dark(#FFFFFF,#0F1A4A);--field:light-dark(#F3F7F9,#0A1440);
+--ink:light-dark(#0E1A4F,#EAF2F4);--soft:light-dark(#5A6B80,#9FB7C2);--line:light-dark(#E2EBEF,#1F2D66);
+--band:light-dark(#E0F0F2,#142A5E);--tint:light-dark(#E8F3F5,#13265A);
+--shadow:light-dark(0 1px 2px rgba(14,26,79,.05),0 0 0 1px #1F2D66)}
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
 html{-webkit-text-size-adjust:100%;background:var(--navy)}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Manrope,system-ui,sans-serif;overflow-x:clip;padding-bottom:calc(84px + env(safe-area-inset-bottom));min-height:100dvh;-webkit-tap-highlight-color:transparent}
-header{position:sticky;top:0;z-index:6;background:var(--navy);color:var(--ice);padding:18px max(5vw,16px,env(safe-area-inset-right)) 14px max(5vw,16px,env(safe-area-inset-left));display:flex;justify-content:space-between;align-items:center;gap:12px}
-header h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-.01em}
-header small{color:var(--aqua);font-size:14px}
-main{max-width:720px;margin:0 auto;padding:16px max(4vw,14px,env(safe-area-inset-right)) 16px max(4vw,14px,env(safe-area-inset-left))}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Manrope,system-ui,sans-serif;overflow-x:clip;padding-bottom:calc(88px + env(safe-area-inset-bottom));min-height:100dvh;-webkit-tap-highlight-color:transparent}
+a{color:var(--teal)}
+
+/* ---------- Encabezado ---------- */
+header{position:sticky;top:0;z-index:6;background:var(--navy);color:var(--ice);display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:14px max(5vw,16px,env(safe-area-inset-right)) 14px max(5vw,16px,env(safe-area-inset-left));
+  padding-top:max(14px,calc(env(safe-area-inset-top) + var(--topgap,30px)))}
+@media(display-mode:browser){header{padding-top:max(14px,env(safe-area-inset-top))}}
+header h1{margin:0;font-size:19px;font-weight:800;letter-spacing:-.01em;line-height:1.2}
+header small{color:var(--aqua);font-size:13px;font-weight:600}
+.brand{display:flex;align-items:center;gap:10px}
+.gear{color:var(--ice);width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:12px}
+.gear:active,.gear.on{background:rgba(94,179,190,.22)}
+
+/* ---------- Estructura ---------- */
+main{max-width:720px;margin:0 auto;padding:20px max(4vw,16px,env(safe-area-inset-right)) 8px max(4vw,16px,env(safe-area-inset-left))}
 section.view{display:none}section.view.on{display:block}
-h2{font-size:22px;margin:22px 0 10px;line-height:1.15}
-h3{font-size:17px;margin:0 0 6px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}
-.hero{background:linear-gradient(160deg,var(--navy),#1A2C6E);color:var(--ice);border:0;padding:22px}
-.hero .lbl{color:var(--aqua);font-size:14px;font-weight:600}
-.big{font-size:clamp(56px,16vw,88px);font-weight:800;line-height:1;letter-spacing:-.03em}
-.big span{font-size:18px;font-weight:600;color:var(--aqua);margin-left:6px}
-.scale{position:relative;height:12px;border-radius:6px;margin:18px 0 8px;background:linear-gradient(90deg,var(--alert) 0 25%,var(--aqua) 25% 50%,var(--warn) 50% 75%,var(--alert) 75% 100%)}
-.scale i{position:absolute;top:-6px;width:4px;height:24px;margin-left:-2px;background:#fff;border-radius:2px;box-shadow:0 0 0 2px var(--navy);transition:left .5s}
-.ticks{position:relative;height:20px;font-size:13px;color:var(--aqua)}
+h2{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:0 0 16px;line-height:1.15}
+.sect{display:flex;justify-content:space-between;align-items:baseline;margin:28px 0 12px}
+.sect h3{font-size:19px;margin:0}
+h3{font-size:17px;font-weight:800;margin:0 0 4px;line-height:1.3}
+.card{background:var(--card);border-radius:20px;padding:18px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card>.note:first-of-type{margin-top:0}
+.note{font-size:14px;color:var(--soft);margin:4px 0 12px;line-height:1.45}
+.insight{font-size:14px;color:var(--soft);margin:12px 0 0;line-height:1.45}
+.hidden{display:none!important}
+.disclaimer{font-size:13px;color:var(--soft);text-align:center;margin:20px 8px 4px;line-height:1.45}
+
+/* ---------- Tarjeta de la última lectura ---------- */
+.hero{background:var(--navy);color:var(--ice);padding:20px 20px 16px}
+:root[data-theme=dark] .hero{background:#16246A}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .hero{background:#16246A}}
+.hero .lbl{color:var(--aqua);font-size:13px;font-weight:600}
+.heroRow{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:2px}
+.big{font-size:clamp(56px,16vw,80px);font-weight:800;line-height:1;letter-spacing:-.03em}
+.big span{font-size:17px;font-weight:600;color:var(--aqua);margin-left:6px;letter-spacing:0}
+.scale{position:relative;height:10px;border-radius:5px;margin:18px 0 8px;background:linear-gradient(90deg,var(--alert) 0 25%,var(--aqua) 25% 50%,var(--warn) 50% 75%,var(--alert) 75% 100%)}
+.scale i{position:absolute;top:-6px;width:4px;height:22px;margin-left:-2px;background:#fff;border-radius:2px;box-shadow:0 0 0 2px var(--navy);transition:left .5s}
+.ticks{position:relative;height:18px;font-size:12px;color:var(--aqua)}
 .ticks span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
 .ticks span:first-child{transform:none}.ticks span:last-child{transform:translateX(-100%)}
-.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:13px;font-weight:700;white-space:nowrap}
+
+/* ---------- Mensajes de motivación (sin degradados) ---------- */
+.marquee{overflow:hidden;background:var(--tint);color:var(--ink);border-radius:14px;margin:0 0 12px;padding:11px 0}
+.mq-track{display:flex;width:max-content;animation:mq var(--mqdur,90s) linear infinite}
+.mq-track span{white-space:nowrap;font-weight:700;font-size:15px;padding:0 20px;position:relative}
+.mq-track span::after{content:"";position:absolute;right:-3px;top:50%;width:6px;height:6px;border-radius:50%;background:var(--aqua);transform:translateY(-50%)}
+.marquee:active .mq-track{animation-play-state:paused}
+@keyframes mq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ---------- Estados ---------- */
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:13px;font-weight:700;white-space:nowrap;vertical-align:middle}
 .ok{background:var(--aqua);color:var(--navy)}.low,.crit{background:var(--alert);color:#fff}.high{background:var(--warn);color:var(--navy)}.vhigh{background:var(--alert);color:#fff}
-label{display:block;font-size:14px;font-weight:600;color:var(--soft);margin-bottom:4px}
+.banner{background:var(--warn);color:var(--navy);padding:10px 14px;border-radius:14px;font-size:14px;margin-bottom:12px;display:none}
+
+/* ---------- Formularios ---------- */
+label{display:block;font-size:13px;font-weight:700;color:var(--soft);margin-bottom:6px}
+input,select,textarea{width:100%;font:16px Manrope,sans-serif;padding:12px 14px;border-radius:14px;border:1px solid transparent;background:var(--field);color:var(--ink);min-height:48px}
+input::placeholder{color:light-dark(#9AA9B6,#5F7590)}
 input[type=date],input[type=datetime-local],input[type=time]{-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%;text-align:left}
 input::-webkit-date-and-time-value{text-align:left;margin:0}
-select{-webkit-appearance:none;appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--soft) 50%),linear-gradient(135deg,var(--soft) 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 12px) 50%;background-size:6px 6px;background-repeat:no-repeat;padding-right:32px!important}
-input,select,textarea{width:100%;font:16px Manrope,sans-serif;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-height:46px}
-input:focus,select:focus,textarea:focus,button:focus-visible{outline:3px solid var(--aqua);outline-offset:1px}
-.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.field{margin-bottom:10px}
-button{font:700 16px Manrope,sans-serif;min-height:46px;padding:10px 16px;border-radius:12px;border:0;cursor:pointer;background:var(--teal);color:#fff}
-button.ghost{background:transparent;color:var(--teal);border:1px solid var(--line)}
-button.sm{min-height:36px;padding:6px 12px;font-size:14px}
-button.danger{background:var(--alert)}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.rec{border-left:5px solid var(--aqua)}.rec.urgent{border-left-color:var(--alert)}.rec.warn{border-left-color:var(--warn)}.rec.good{border-left-color:var(--teal)}
-.rec p{margin:4px 0 0;color:var(--soft)}
-.lists{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.lists ul{margin:6px 0 0;padding-left:18px}.lists li{margin:3px 0}
-.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}
-.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
-.kpi b{display:block;font-size:28px;line-height:1.1}.kpi small{color:var(--soft);font-size:13px}
-.seg{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.seg button{background:var(--card);color:var(--ink);border:1px solid var(--line);min-height:40px;font-size:14px}
-.seg button.on{background:light-dark(var(--navy),var(--aqua));color:light-dark(var(--ice),var(--navy));border-color:transparent}
-.fig{position:relative;min-height:260px}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
-.fig.short{min-height:200px}
-.insight{font-size:15px;color:var(--soft);margin:8px 0 0}
-.stackbar{display:flex;height:30px;border-radius:10px;overflow:hidden;margin:8px 0}
-.stackbar div{height:100%}
-.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--soft)}
-.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;background:var(--c)}
-.hrow{display:grid;grid-template-columns:7.5em minmax(0,1fr) 4.5em;gap:8px;align-items:center;margin:8px 0;font-size:14px}
-.hrow .tr{background:var(--band);border-radius:8px;height:22px;overflow:hidden}.hrow .tr div{height:100%;border-radius:8px}
-.hrow b{text-align:right;white-space:nowrap}
-.entry{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);align-items:center}
-.entry:last-child{border-bottom:0}
-.entry .v{font-size:22px;font-weight:800;white-space:nowrap}.entry .m{font-size:13px;color:var(--soft)}
-.entry.editing{background:var(--band);border-radius:14px;padding:12px;margin:6px 0;border-bottom:0}
-.entry.inl{display:block}
-.inl .field{margin-bottom:8px}
-.inl input,.inl select{background:var(--card)}
-.dayh{font-weight:700;margin:14px 0 2px;color:var(--teal)}
-.banner{background:var(--warn);color:var(--navy);padding:10px 14px;border-radius:12px;font-size:14px;margin-bottom:12px;display:none}
-.note{font-size:13px;color:var(--soft)}
-.med{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
-.med:last-child{border-bottom:0}
-.chk{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--ink);margin:0}
-.chk input{width:26px;height:26px;min-height:0;accent-color:var(--teal)}
-nav{position:fixed;bottom:0;left:0;right:0;background:var(--navy);display:grid;grid-template-columns:repeat(5,1fr);padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:5}
-nav a{color:#A9C3CC;text-decoration:none;font-size:12px;font-weight:600;text-align:center;padding:6px 2px;border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:48px;justify-content:center}
-nav a svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2}
-nav a.on{color:var(--navy);background:var(--aqua)}
-#login{position:fixed;inset:0;background:var(--navy);color:var(--ice);z-index:20;display:none;overflow:auto;padding:max(40px,env(safe-area-inset-top)) max(6vw,18px) 40px}
-#login .box{max-width:420px;margin:0 auto}
-#login h1{font-size:34px;margin:16px 0 6px;line-height:1.05}
-#login p{color:var(--aqua);margin:0 0 22px}
-#login label{color:var(--aqua)}
-#login input{background:#16246A;border-color:#2B3F8C;color:var(--ice)}
-#login button{width:100%;margin-top:10px}
-#login .alt{background:var(--ice);color:var(--navy)}
-#login .link{background:none;color:var(--aqua);min-height:40px;font-weight:600;font-size:15px}
-#loginErr{color:#FFB4AC;min-height:22px;font-size:14px;margin-top:8px}
-header{padding-top:max(18px,calc(env(safe-area-inset-top) + var(--topgap,30px)))}
-@media(display-mode:browser){header{padding-top:max(18px,env(safe-area-inset-top))}}
-.target{display:flex;justify-content:space-between;gap:10px;align-items:center;background:var(--band);border-radius:12px;padding:10px 12px;margin:0 0 12px;font-size:14px}
-.target>span{flex:1}.target>b{font-size:18px;white-space:nowrap;flex:none}
-.target.over{background:light-dark(#FBE3D3,#4A2A2A)}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}
-.chips span{background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:4px 10px;font-size:13px;white-space:nowrap}
-.sub{border-top:1px solid var(--line);margin-top:16px;padding-top:14px}
-.taken{font-size:13px;color:var(--teal);font-weight:700;white-space:nowrap}
+select{-webkit-appearance:none;appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--soft) 50%),linear-gradient(135deg,var(--soft) 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 12px) 50%;background-size:6px 6px;background-repeat:no-repeat;padding-right:34px!important}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--aqua);background:var(--card)}
+button:focus-visible,a:focus-visible{outline:3px solid var(--aqua);outline-offset:2px}
+.field{margin-bottom:12px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-@media(max-width:480px){#fProfile .grid3{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.medcard{border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:12px}
-.medhead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
-.sched{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px dashed var(--line)}
-.sched .hr{font-size:20px;font-weight:800;white-space:nowrap}
-.addsched{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.6fr) auto;gap:8px;margin-top:10px;align-items:end}
-.addsched input,.addsched select{min-height:44px;padding:9px 10px}
-.addsched button{min-height:42px;padding:8px 14px}
-@media(max-width:600px){.addsched{grid-template-columns:repeat(3,minmax(0,1fr))}.addsched .ds,.addsched button{grid-column:1/-1}}
-.dose{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
-.dose:last-child{border-bottom:0}
-.dose .hr{font-size:17px;font-weight:800;width:6.4em;flex:none;white-space:nowrap}
-.dose.late .hr{color:var(--alert)}
-.dose .info{flex:1}
-.marquee{position:relative;overflow:hidden;background:var(--teal);color:#fff;border-radius:16px;margin:-4px 0 14px;padding:12px 0;mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
-.mq-track{display:flex;width:max-content;animation:mq var(--mqdur,90s) linear infinite}
-.mq-track span{white-space:nowrap;font-weight:700;font-size:16px;padding:0 22px;position:relative}
-.mq-track span::after{content:"";position:absolute;right:-4px;top:50%;width:7px;height:7px;border-radius:50%;background:var(--aqua);transform:translateY(-50%)}
-.marquee:active .mq-track,.marquee:hover .mq-track{animation-play-state:paused}
-@keyframes mq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@media(prefers-reduced-motion:reduce){.mq-track{animation:none;flex-wrap:wrap;width:auto}.mq-track span{white-space:normal;padding:4px 16px}.mq-track span:nth-child(n+2){display:none}}
+.grid2>.field,.grid3>.field{margin-bottom:0}
+.grid2+.grid2,.grid2+.field,.grid3+.field,.field+.grid2,.field+.grid3,.grid2+.target,.target+.grid2{margin-top:12px}
+form>button[type=submit],.full{width:100%;margin-top:16px}
+.target{display:flex;justify-content:space-between;gap:10px;align-items:center;background:var(--tint);border-radius:14px;padding:10px 14px;margin:12px 0 0;font-size:14px}
+.target>span{flex:1}.target>b{font-size:17px;white-space:nowrap;flex:none}
+.target.over{background:light-dark(#FCE9DD,#43263A)}
+details.more{margin-top:12px}
+details.more summary{list-style:none;cursor:pointer;font-size:14px;font-weight:700;color:var(--teal);display:inline-flex;align-items:center;gap:6px;min-height:32px}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::after{content:"";width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin-top:-4px;transition:transform .2s}
+details.more[open] summary::after{transform:rotate(-135deg);margin-top:3px}
+details.more[open] summary{margin-bottom:10px}
+
+/* ---------- Botones ---------- */
+button,label.btnlike,.btn{font:700 16px Manrope,sans-serif;min-height:48px;padding:12px 18px;border-radius:14px;border:0;cursor:pointer;background:var(--teal);color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;text-align:center;margin:0}
+button.ghost,.btn.ghost{background:var(--tint);color:var(--teal);border:0}
+button.sm,label.btnlike.sm,.btn.sm{min-height:36px;padding:7px 14px;font-size:14px;border-radius:12px}
+button.link{background:none;color:var(--teal);padding:6px 0;min-height:32px;font-size:15px}
+button.danger,button.ghost.danger{background:var(--alert);color:#fff}
+button:active,label.btnlike:active,.btn:active{transform:scale(.98)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.actions{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.actions>*{min-height:44px;padding:10px 8px;font-size:15px;white-space:nowrap}
+
+/* ---------- Recomendaciones ---------- */
+.rec{position:relative;padding-left:22px}
+.rec::before{content:"";position:absolute;left:0;top:18px;bottom:18px;width:4px;border-radius:0 4px 4px 0;background:var(--aqua)}
+.rec.urgent::before{background:var(--alert)}.rec.warn::before{background:var(--warn)}.rec.good::before{background:var(--teal)}
+.rec p{margin:4px 0 0;color:var(--soft);font-size:15px;line-height:1.5}
 details.fold summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;min-height:28px}
 details.fold summary::-webkit-details-marker{display:none}
-details.fold summary::after{content:"";width:9px;height:9px;border-right:2.5px solid var(--teal);border-bottom:2.5px solid var(--teal);transform:rotate(45deg);margin:-4px 4px 0 0;transition:transform .2s}
+details.fold summary::after{content:"";width:8px;height:8px;border-right:2.5px solid var(--teal);border-bottom:2.5px solid var(--teal);transform:rotate(45deg);margin:-4px 4px 0 0;transition:transform .2s}
 details.fold[open] summary::after{transform:rotate(-135deg);margin-top:4px}
-.gtabs{display:grid;grid-template-columns:repeat(3,1fr);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px;gap:4px;margin-bottom:12px}
-.gtabs button{background:transparent;color:var(--soft);min-height:40px;font-size:15px;border-radius:10px}
+.lists{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:14px}
+.lists ul{margin:6px 0 0;padding-left:18px;font-size:15px}.lists li{margin:4px 0}
+
+/* ---------- Listas ---------- */
+.entry{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);align-items:center}
+.entry:last-child{border-bottom:0}
+.entry .v{font-size:22px;font-weight:800;white-space:nowrap;line-height:1.2}.entry .m{font-size:13px;color:var(--soft);margin-top:2px}
+.entry .row{flex-wrap:nowrap;gap:6px}
+.entry.editing{background:var(--tint);border-radius:16px;padding:14px;margin:8px 0;border-bottom:0}
+.entry.inl{display:block}
+.inl input,.inl select{background:var(--card)}
+.inl .grid2:last-child{margin-top:16px}
+.dayh{font-weight:800;font-size:14px;margin:18px 0 2px;color:var(--teal);display:flex;justify-content:space-between;gap:8px}
+.dayh:first-child{margin-top:0}
+.dayh span{color:var(--soft);font-weight:600}
+
+/* ---------- Pastillas ---------- */
+.dose{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.dose:last-child{border-bottom:0;padding-bottom:0}
+.dose .hr{font-size:15px;font-weight:800;width:6.6em;flex:none;white-space:nowrap}
+.dose.late .hr{color:var(--alert)}
+.dose .info{flex:1;line-height:1.3}
+.taken{font-size:13px;color:var(--teal);font-weight:700;margin-top:2px}
+.chk{display:flex;align-items:center;margin:0}
+.chk input{width:28px;height:28px;min-height:0;accent-color:var(--teal);padding:0}
+.medcard{padding:16px 0;border-bottom:1px solid var(--line)}
+.medcard:first-of-type{padding-top:4px}.medcard:last-child{border-bottom:0;padding-bottom:0}
+.medhead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.medhead b{font-size:18px}
+.sched{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0}
+.sched .hr{font-size:17px;font-weight:800;white-space:nowrap}
+.scheds{margin-top:8px;background:var(--tint);border-radius:14px;padding:4px 14px}
+.scheds .sched+.sched{border-top:1px solid var(--line)}
+.addsched{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px;background:var(--tint);border-radius:14px;padding:14px}
+.addsched input,.addsched select{background:var(--card)}
+.addsched .ds,.addsched .btns{grid-column:1/-1}
+.addsched .btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.openSched{margin-top:10px;width:100%}
+
+/* ---------- Indicadores y gráficas ---------- */
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px}
+.kpi{background:var(--card);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow)}
+.kpi small{display:block;color:var(--soft);font-size:13px;line-height:1.35}
+.kpi b{display:block;font-size:28px;line-height:1.15;margin:4px 0 2px;letter-spacing:-.01em}
+.gtabs{display:grid;grid-template-columns:repeat(3,1fr);background:var(--card);border-radius:16px;padding:4px;gap:4px;margin-bottom:12px;box-shadow:var(--shadow)}
+.gtabs button{background:transparent;color:var(--soft);min-height:42px;font-size:15px;border-radius:12px}
 .gtabs button.on{background:light-dark(var(--navy),var(--aqua));color:light-dark(var(--ice),var(--navy))}
+.seg{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto}
+.seg button{background:transparent;color:var(--soft);min-height:34px;padding:6px 14px;font-size:14px;border-radius:99px;flex:none}
+.seg button.on{background:var(--tint);color:var(--teal)}
 .gpane{display:none}.gpane.on{display:block}
-.seg.small button{min-height:34px;padding:4px 12px;font-size:13px}
-label.btnlike{display:flex;align-items:center;justify-content:center;margin:0;min-height:46px;padding:10px 16px;border-radius:12px;background:var(--teal);color:#fff;font-weight:700;font-size:16px;cursor:pointer;text-align:center}
-.gear{color:var(--ice);width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:12px}
-.gear:active,.gear.on{background:rgba(94,179,190,.25)}
-.opt{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
-.opt:last-child{border-bottom:0}
-.opt .txt{flex:1}.opt .txt b{display:block}.opt .txt span{font-size:13px;color:var(--soft)}
-.opt select{width:auto;min-width:9.5em}
+.fig{position:relative;min-height:250px;margin-top:8px}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+.fig.short{min-height:190px}
+.stackbar{display:flex;height:26px;border-radius:10px;overflow:hidden;margin:12px 0}
+.stackbar div{height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--soft);margin-top:10px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;background:var(--c)}
+.hrow{display:grid;grid-template-columns:7.5em minmax(0,1fr) 4em;gap:10px;align-items:center;margin:10px 0;font-size:14px}
+.hrow .tr{background:var(--tint);border-radius:8px;height:20px;overflow:hidden}.hrow .tr div{height:100%;border-radius:8px}
+.hrow b{text-align:right;white-space:nowrap}
+
+/* ---------- Configuración ---------- */
+.opt{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.opt:first-of-type{padding-top:8px}.opt:last-child{border-bottom:0;padding-bottom:0}
+.opt .txt{flex:1}.opt .txt b{display:block;font-size:16px}.opt .txt span{font-size:13px;color:var(--soft)}
+.opt select{width:auto;min-width:9em;min-height:42px}
 .switch{position:relative;width:52px;height:32px;flex:none}
 .switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1;min-height:0}
-.switch i{position:absolute;inset:0;background:var(--line);border-radius:99px;transition:background .2s}
+.switch i{position:absolute;inset:0;background:light-dark(#CBD8DE,#2B3B78);border-radius:99px;transition:background .2s}
 .switch i::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
 .switch input:checked+i{background:var(--teal)}.switch input:checked+i::after{transform:translateX(20px)}
 input[type=range]{padding:0;min-height:32px;accent-color:var(--teal);background:transparent;border:0}
+
+/* ---------- Navegación ---------- */
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--navy);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 6px calc(8px + env(safe-area-inset-bottom));z-index:5}
+nav a{color:#9FB7C2;text-decoration:none;font-size:11px;font-weight:700;text-align:center;padding:4px 2px;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:48px;justify-content:center}
+nav a svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;padding:3px 14px;box-sizing:content-box;border-radius:99px}
+nav a.on{color:var(--aqua)}nav a.on svg{background:rgba(94,179,190,.2)}
+
+/* ---------- Varios ---------- */
+#login{position:fixed;inset:0;background:var(--navy);color:var(--ice);z-index:20;display:none;overflow:auto;padding:max(40px,env(safe-area-inset-top)) max(6vw,18px) 40px}
+#login .box{max-width:420px;margin:0 auto}#login h1{font-size:34px;margin:16px 0 6px}#login p{color:var(--aqua);margin:0 0 22px}
+#login label{color:var(--aqua)}#login input{background:#16246A;color:var(--ice)}#login button{width:100%;margin-top:10px}
+#login .alt{background:var(--ice);color:var(--navy)}#login .link{background:none;color:var(--aqua)}#loginErr{color:#FFB4AC;min-height:22px;font-size:14px;margin-top:8px}
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 18px;border-radius:14px;font-weight:700;font-size:15px;display:none;z-index:9;max-width:90vw;box-shadow:0 6px 20px rgba(14,26,79,.25)}
+:root[data-theme=dark] .toast{background:var(--teal)}
 html.bigtext body{zoom:1.12}
 html.nomotion *{animation:none!important;transition:none!important}
-html.nomotion .mq-track{flex-wrap:wrap;width:auto}html.nomotion .mq-track span{white-space:normal;padding:4px 16px}html.nomotion .mq-track span:nth-child(n+2){display:none}
-.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--teal);color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;display:none;z-index:9;max-width:90vw}
-@media(max-width:480px){.lists{grid-template-columns:1fr}.hrow{grid-template-columns:6.5em minmax(0,1fr) 4em}}
-@media(prefers-reduced-motion:reduce){.scale i{transition:none}}
+html.nomotion .mq-track,.reduce .mq-track{flex-wrap:wrap;width:auto}
+html.nomotion .mq-track span{white-space:normal;padding:2px 16px}html.nomotion .mq-track span:nth-child(n+2){display:none}html.nomotion .mq-track span::after{display:none}
+@media(prefers-reduced-motion:reduce){.mq-track{animation:none;flex-wrap:wrap;width:auto}.mq-track span{white-space:normal;padding:2px 16px}.mq-track span:nth-child(n+2){display:none}.mq-track span::after{display:none}.scale i{transition:none}}
+@media(max-width:480px){.lists{grid-template-columns:1fr}.hrow{grid-template-columns:6.5em minmax(0,1fr) 3.6em}#fProfile .grid3{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -190,7 +242,7 @@ html.nomotion .mq-track{flex-wrap:wrap;width:auto}html.nomotion .mq-track span{w
   </div>
 </div>
 
-<header><div style="display:flex;align-items:center;gap:10px"><svg width="30" height="30" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 3C11 12 7 17 7 22a10 10 0 0 0 20 0c0-5-4-10-10-19z" fill="#5EB3BE"/><path d="M12 22a5 5 0 0 0 5 5" stroke="#0E1A4F" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg><div><h1>Mi Glucosa</h1><small id="hello">Conectando…</small></div></div>
+<header><div class="brand"><svg width="30" height="30" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 3C11 12 7 17 7 22a10 10 0 0 0 20 0c0-5-4-10-10-19z" fill="#5EB3BE"/><path d="M12 22a5 5 0 0 0 5 5" stroke="#0E1A4F" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg><div><h1>Mi Glucosa</h1><small id="hello">Conectando…</small></div></div>
 <a href="#config" class="gear" aria-label="Configuración"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></a></header>
 <main>
 <div class="banner" id="banner"></div>
@@ -199,16 +251,15 @@ html.nomotion .mq-track{flex-wrap:wrap;width:auto}html.nomotion .mq-track span{w
 <section class="view" id="v-inicio">
   <div class="card hero">
     <div class="lbl" id="lastWhen">Sin lecturas todavía</div>
-    <div class="big" id="lastVal">—<span>mg/dL</span></div>
-    <div style="margin-top:8px" id="lastPill"></div>
+    <div class="heroRow"><div class="big" id="lastVal">—<span>mg/dL</span></div><div id="lastPill" style="padding-bottom:10px"></div></div>
     <div class="scale"><i id="marker" style="left:0;display:none"></i></div>
     <div class="ticks"><span style="left:0">40</span><span style="left:25%">70</span><span style="left:50%">180</span><span style="left:75%">250</span><span style="left:100%">400</span></div>
   </div>
 
-  <div class="card" id="restoreHint" style="display:none;border:2px dashed var(--aqua)">
+  <div class="card" id="restoreHint" style="display:none">
     <h3>¿Ya tenías datos guardados?</h3>
-    <p class="note" style="margin-top:0">Si descargaste un respaldo desde Safari u otro celular, súbelo aquí y se cargan tus lecturas, pastillas, pesos y perfil.</p>
-    <label class="btnlike" for="bImport">Subir respaldo</label>
+    <p class="note">Si descargaste un respaldo desde Safari u otro celular, súbelo y se cargan tus lecturas, pastillas, pesos y perfil.</p>
+    <label class="btnlike" for="bImport" style="width:100%">Subir respaldo</label>
   </div>
 
   <div class="marquee" id="marquee" aria-label="Mensajes de motivación"><div class="mq-track" id="mqTrack"></div></div>
@@ -216,75 +267,70 @@ html.nomotion .mq-track{flex-wrap:wrap;width:auto}html.nomotion .mq-track span{w
   <div class="card">
     <h3>Registrar lectura</h3>
     <form id="fRead">
-      <div class="grid2">
+      <div class="grid2" style="margin-top:12px">
         <div class="field"><label for="rVal">Glucosa (mg/dL)</label><input id="rVal" type="number" inputmode="numeric" min="20" max="600" required placeholder="Ej. 145"></div>
-        <div class="field"><label for="rCtx">Momento</label>
-          <select id="rCtx"><option value="ayunas">En ayunas</option><option value="antes">Antes de comer</option><option value="despues">2 h después de comer</option><option value="dormir">Antes de dormir</option><option value="sensor">Sensor (Dexcom/Libre)</option><option value="otro">Otro</option></select></div>
+        <div class="field"><label for="rCtx">Momento</label><select id="rCtx"><option value="ayunas">En ayunas</option><option value="antes">Antes de comer</option><option value="despues">2 h después de comer</option><option value="dormir">Antes de dormir</option><option value="sensor">Sensor (Dexcom/Libre)</option><option value="otro">Otro</option></select></div>
       </div>
       <div class="target" id="rTarget"></div>
-      <div class="grid2">
-        <div class="field"><label for="rTime">Fecha y hora</label><input id="rTime" type="datetime-local" required></div>
-        <div class="field"><label for="rNote">Nota (opcional)</label><input id="rNote" maxlength="120" placeholder="Ej. comí tamales"></div>
-      </div>
-      <button type="submit" style="width:100%">Guardar lectura</button>
+      <details class="more"><summary>Cambiar fecha o agregar nota</summary>
+        <div class="grid2">
+          <div class="field"><label for="rTime">Fecha y hora</label><input id="rTime" type="datetime-local" required></div>
+          <div class="field"><label for="rNote">Nota</label><input id="rNote" maxlength="120" placeholder="Ej. comí tamales"></div>
+        </div>
+      </details>
+      <button type="submit">Guardar lectura</button>
     </form>
-    <div class="note" style="margin-top:12px">Tus metas (máximo recomendado):</div>
-    <div class="chips" id="goalChips"></div>
-    <div class="sub" id="todayMeds"></div>
   </div>
 
-  <h2>Recomendaciones de hoy</h2>
+  <div class="card" id="todayMeds"></div>
+
+  <div class="sect"><h3>Recomendaciones de hoy</h3></div>
   <div id="recs"></div>
-  <button class="ghost" id="recMore" style="width:100%;margin-bottom:14px;display:none"></button>
+  <button class="ghost" id="recMore" style="width:100%;margin-bottom:12px;display:none"></button>
   <details class="card fold">
     <summary><h3 style="margin:0">Plan de comida para hoy</h3></summary>
-    <div class="lists" style="margin-top:12px"><div><b style="color:var(--teal)">Prefiere</b><ul id="prefer"></ul></div><div><b style="color:var(--alert)">Hoy evita</b><ul id="avoid"></ul></div></div>
+    <div class="lists"><div><b style="color:var(--teal)">Prefiere</b><ul id="prefer"></ul></div><div><b style="color:var(--alert)">Hoy evita</b><ul id="avoid"></ul></div></div>
   </details>
-  <p class="note">Esta app da orientación general basada en tus lecturas y en guías de diabetes; no reemplaza a tu médico. Nunca suspendas ni cambies un medicamento sin indicación médica.</p>
+  <p class="disclaimer">Orientación general basada en tus lecturas y en guías de diabetes; no reemplaza a tu médico. Nunca suspendas ni cambies un medicamento sin indicación médica.</p>
 </section>
 
 <!-- REGISTROS -->
 <section class="view" id="v-registros">
-  <h2>Mis registros</h2>
-  <div class="card">
-    <h3>Registrar lectura manual</h3>
-    <p class="note" style="margin-top:0">Captura lecturas de cualquier día y hora, por ejemplo las que anotaste en papel. La fecha se conserva para que agregues varias seguidas.</p>
+  <h2>Registros</h2>
+  <div class="actions">
+    <button id="xOpen">+ Lectura</button>
+    <label class="btnlike ghost-l" for="csv" style="background:var(--tint);color:var(--teal)">Importar CSV</label>
+    <button class="ghost" id="copyRep">Reporte</button>
+  </div>
+  <input type="file" id="csv" accept=".csv,.txt,text/csv" style="display:none">
+  <p class="note" id="csvMsg" style="margin-top:-4px"></p>
+
+  <div class="card hidden" id="manualCard">
+    <h3>Registrar lectura</h3>
+    <p class="note">Para cualquier día y hora. Puedes registrar todas las lecturas que quieras en un mismo día; la fecha se conserva para capturar varias seguidas.</p>
     <form id="fManual">
       <div class="grid2">
         <div class="field"><label for="xVal">Glucosa (mg/dL)</label><input id="xVal" type="number" inputmode="numeric" min="20" max="600" required placeholder="Ej. 145"></div>
         <div class="field"><label for="xCtx">Momento</label><select id="xCtx"><option value="ayunas">En ayunas</option><option value="antes">Antes de comer</option><option value="despues">2 h después de comer</option><option value="dormir">Antes de dormir</option><option value="sensor">Sensor (Dexcom/Libre)</option><option value="otro">Otro</option></select></div>
       </div>
       <div class="target" id="xTarget"></div>
-      <div class="field"><label for="xDate">Fecha</label><input id="xDate" type="date" required></div>
+      <div class="field" style="margin-top:12px"><label for="xDate">Fecha</label><input id="xDate" type="date" required></div>
       <div class="grid3">
         <div class="field"><label for="xHH">Hora</label><select id="xHH"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></div>
         <div class="field"><label for="xMM">Minutos</label><select id="xMM"><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option><option value="51">51</option><option value="52">52</option><option value="53">53</option><option value="54">54</option><option value="55">55</option><option value="56">56</option><option value="57">57</option><option value="58">58</option><option value="59">59</option></select></div>
-        <div class="field"><label for="xAP">a.m. / p.m.</label><select id="xAP"><option value="am">a.m.</option><option value="pm">p.m.</option></select></div>
+        <div class="field"><label for="xAP">a.m./p.m.</label><select id="xAP"><option value="am">a.m.</option><option value="pm">p.m.</option></select></div>
       </div>
-      <div class="field"><label for="xNote">Nota (opcional)</label><input id="xNote" maxlength="120" placeholder="Ej. después del almuerzo"></div>
-      <button type="submit" id="xSubmit" style="width:100%">Guardar lectura</button>
+      <div class="field" style="margin-top:12px"><label for="xNote">Nota (opcional)</label><input id="xNote" maxlength="120" placeholder="Ej. después del almuerzo"></div>
+      <div class="grid2" style="margin-top:16px"><button type="submit" id="xSubmit">Guardar</button><button type="button" class="ghost" id="xClose">Cerrar</button></div>
     </form>
   </div>
-  <div class="card">
-    <h3>Importar del sensor</h3>
-    <p class="note" style="margin-top:0">Sube el CSV que exportas desde Dexcom Clarity o LibreView. Las lecturas repetidas no se duplican.</p>
-    <input type="file" id="csv" accept=".csv,.txt,text/csv">
-    <p class="note" id="csvMsg"></p>
-  </div>
-  <div class="card">
-    <h3>Respaldo</h3>
-    <p class="note" style="margin-top:0">Descarga una copia de todos tus datos y guárdala en Archivos o iCloud. Para recuperarla, toca Subir respaldo y elige el archivo <b>mi-glucosa-respaldo-….json</b>.</p>
-    <div class="grid2"><button class="ghost" id="bExport">Descargar respaldo</button><label class="btnlike" for="bImport">Subir respaldo</label></div>
-    <input type="file" id="bImport" style="display:none">
-    <p class="note" id="bMsg" style="margin-bottom:0"></p>
-  </div>
-  <div class="row" style="margin-bottom:10px"><button class="ghost sm" id="copyRep">Copiar reporte para mi médico (14 días)</button></div>
+
   <div class="card" id="list"></div>
 </section>
 
 <!-- GRAFICAS -->
 <section class="view" id="v-graficas">
-  <h2>Mis gráficas</h2>
+  <h2>Gráficas</h2>
   <div class="gtabs" id="gtabs"><button data-gt="glu" class="on">Glucosa</button><button data-gt="peso">Peso</button><button data-gt="pills">Pastillas</button></div>
   <div class="seg small" id="range"><button data-d="7" class="on">7 días</button><button data-d="14">14 días</button><button data-d="30">30 días</button><button data-d="90">90 días</button></div>
   <div class="gpane on" id="gp-glu">
@@ -329,25 +375,25 @@ html.nomotion .mq-track{flex-wrap:wrap;width:auto}html.nomotion .mq-track span{w
 
 <!-- MEDICAMENTOS -->
 <section class="view" id="v-meds">
-  <h2>Medicamentos</h2>
+  <h2>Medicinas</h2>
   <div class="card" id="medList"></div>
-  <div class="card">
+  <button id="mOpen" class="full" style="margin:0 0 12px">+ Agregar medicamento</button>
+  <div class="card hidden" id="medFormCard">
     <h3 id="medFormT">Agregar medicamento</h3>
     <form id="fMed">
       <input type="hidden" id="mId">
-      <div class="grid2">
+      <div class="grid2" style="margin-top:12px">
         <div class="field"><label for="mName">Nombre</label><input id="mName" required maxlength="60" placeholder="Ej. Metformina"></div>
         <div class="field"><label for="mDose">Dosis habitual</label><input id="mDose" maxlength="40" placeholder="Ej. 850 mg"></div>
       </div>
       <div class="grid2">
         <div class="field"><label for="mKind">Tipo</label><select id="mKind"><option value="oral">Oral (pastilla)</option><option value="insulina">Insulina</option><option value="inyectable">Otro inyectable</option><option value="otro">Otro</option></select></div>
-        <div class="field"><label for="mNotes">Notas</label><input id="mNotes" maxlength="120" placeholder="Ej. tomar con comida"></div>
+        <div class="field"><label for="mNotes">Notas</label><input id="mNotes" maxlength="120" placeholder="Ej. con comida"></div>
       </div>
-      <p class="note" style="margin-top:0">Después de guardarlo, agrégale los horarios que necesites (uno por uno) en la lista de arriba.</p>
-      <div class="row"><button type="submit">Guardar</button><button type="button" class="ghost" id="mCancel" style="display:none">Cancelar</button></div>
+      <div class="grid2" style="margin-top:16px"><button type="submit">Guardar</button><button type="button" class="ghost" id="mCancel">Cancelar</button></div>
     </form>
   </div>
-  <p class="note">Si notas que un medicamento nuevo (por ejemplo, un corticoide como la prednisona) te sube la glucosa, coméntalo con tu médico; no lo suspendas por tu cuenta.</p>
+  <p class="disclaimer">Si un medicamento nuevo (por ejemplo, un corticoide como la prednisona) te sube la glucosa, coméntalo con tu médico; no lo suspendas por tu cuenta.</p>
 </section>
 
 <!-- CONFIGURACION -->
@@ -378,12 +424,13 @@ html.nomotion .mq-track{flex-wrap:wrap;width:auto}html.nomotion .mq-track span{w
     <div class="opt"><div class="txt"><b>Plan de comida abierto</b><span>Mostrarlo desplegado siempre</span></div>
       <label class="switch"><input type="checkbox" id="cFood"><i></i></label></div>
     <div class="opt"><div class="txt"><b>Metas de glucosa</b><span>Ayunas, después de comer y antes de dormir</span></div>
-      <a href="#perfil" class="ghost sm" style="text-decoration:none;color:var(--teal);font-weight:700;padding:8px 12px;border:1px solid var(--line);border-radius:12px">Editar</a></div>
+      <a href="#perfil" class="btn ghost sm">Editar</a></div>
   </div>
   <div class="card">
     <h3>Datos</h3>
-    <div class="opt"><div class="txt"><b>Respaldo</b><span id="cLastBk">Descarga una copia o súbela en otro celular</span></div>
-      <div class="row" style="gap:6px;flex-wrap:nowrap"><button class="ghost sm" data-export="1">Descargar</button><label class="btnlike" for="bImport" style="min-height:36px;padding:6px 12px;font-size:14px">Subir</label></div></div>
+    <div class="opt" style="display:block"><div class="txt"><b>Respaldo</b><span id="cLastBk">Guarda una copia en Archivos o iCloud, o súbela en otro celular. En iPhone, Safari y la app de inicio guardan datos por separado.</span></div>
+      <div class="grid2" style="margin-top:12px"><button class="ghost" data-export="1">Descargar</button><label class="btnlike" for="bImport">Subir</label></div>
+      <p class="note" id="bMsg" style="margin:8px 0 0"></p></div>
     <div class="opt"><div class="txt"><b>Espacio usado</b><span id="cSpace">—</span></div></div>
     <div class="opt"><div class="txt"><b>Borrar todos los datos</b><span>Elimina lecturas, pastillas, pesos y perfil de este celular</span></div>
       <button class="ghost sm" id="cWipe" style="color:var(--alert)">Borrar</button></div>
@@ -393,7 +440,7 @@ html.nomotion .mq-track{flex-wrap:wrap;width:auto}html.nomotion .mq-track span{w
 
 <!-- PERFIL -->
 <section class="view" id="v-perfil">
-  <h2>Mi perfil</h2>
+  <h2>Perfil</h2>
   <div class="kpis">
     <div class="kpi"><small>Peso actual</small><b id="pW">—</b><small id="pWd">kg</small></div>
     <div class="kpi"><small>Índice de masa corporal</small><b id="pBmi">—</b><small id="pBmiC">agrega altura y peso</small></div>
@@ -403,19 +450,19 @@ html.nomotion .mq-track{flex-wrap:wrap;width:auto}html.nomotion .mq-track span{w
 
   <div class="card">
     <h3>Registrar peso</h3>
-    <form id="fWeight" class="grid2">
+    <form id="fWeight" class="grid2" style="margin-top:12px">
       <div class="field"><label for="wKg">Peso (kg)</label><input id="wKg" type="number" inputmode="decimal" step="0.1" min="25" max="350" required placeholder="Ej. 92.5"></div>
       <div class="field"><label for="wDate">Fecha</label><input id="wDate" type="date" required></div>
-      <button type="submit" style="grid-column:1/-1">Guardar peso</button>
+      <button type="submit" style="grid-column:1/-1;margin-top:4px">Guardar peso</button>
     </form>
     <p class="insight" id="iWeight"></p>
-    <a href="#graficas" data-gt="peso" style="color:var(--teal);font-weight:700;display:inline-block;margin-bottom:6px">Ver gráfica de peso →</a>
+    <a href="#graficas" data-gt="peso" style="font-weight:700;display:inline-block;margin:10px 0 4px">Ver gráfica de peso →</a>
     <div id="wList"></div>
   </div>
 
   <div class="card">
     <h3>Datos personales</h3>
-    <form id="fProfile">
+    <form id="fProfile" style="margin-top:12px">
       <div class="grid2">
         <div class="field"><label for="pName">Nombre</label><input id="pName" maxlength="40" autocomplete="given-name"></div>
         <div class="field"><label for="pBirth">Fecha de nacimiento</label><input id="pBirth" type="date"></div>
@@ -428,8 +475,8 @@ html.nomotion .mq-track{flex-wrap:wrap;width:auto}html.nomotion .mq-track span{w
         <div class="field"><label for="sType">Tipo de diabetes</label><select id="sType"><option value="2">Tipo 2</option><option value="1">Tipo 1</option><option value="pre">Prediabetes</option><option value="otro">Otro / no sé</option></select></div>
         <div class="field"><label for="pAct">Actividad física</label><select id="pAct"><option value="sed">Casi nada (sedentario)</option><option value="lig">Ligera (caminar 1–3 días)</option><option value="mod">Moderada (4–5 días)</option><option value="alta">Alta (diario)</option></select></div>
       </div>
-      <h3 style="margin-top:8px">Mis metas de glucosa (máximo)</h3>
-      <p class="note" style="margin-top:0">Vienen con las metas de la Asociación Americana de Diabetes. Si tu médico te dio otras, cámbialas aquí.</p>
+      <h3 style="margin-top:24px">Mis metas de glucosa (máximo)</h3>
+      <p class="note">Vienen con las metas de la Asociación Americana de Diabetes. Si tu médico te dio otras, cámbialas aquí.</p>
       <div class="grid3">
         <div class="field"><label for="gFast">Ayunas y antes de comer</label><input id="gFast" type="number" inputmode="numeric" min="90" max="200"></div>
         <div class="field"><label for="gPost">2 h después de comer</label><input id="gPost" type="number" inputmode="numeric" min="120" max="250"></div>
@@ -439,16 +486,7 @@ html.nomotion .mq-track{flex-wrap:wrap;width:auto}html.nomotion .mq-track span{w
     </form>
   </div>
 
-  <div class="card">
-    <h3>Respaldo de mis datos</h3>
-    <p class="note" style="margin-top:0">En iPhone, Safari y la app de tu pantalla de inicio guardan datos por separado. Usa el respaldo para pasar tus datos de uno a otro o a un celular nuevo.</p>
-    <div class="grid2"><button class="ghost" data-export="1">Descargar respaldo</button><label class="btnlike" for="bImport">Subir respaldo</label></div>
-  </div>
-  <div class="card">
-    <h3>Cuenta</h3>
-    <p class="note" style="margin-top:0" id="accInfo">Modo local: tus datos se guardan solo en este dispositivo.</p>
-    <button class="ghost sm" id="logout" style="display:none">Cerrar sesión</button>
-  </div>
+  <div class="hidden"><p id="accInfo"></p><button id="logout"></button></div>
 </section>
 </main>
 
@@ -459,6 +497,7 @@ html.nomotion .mq-track{flex-wrap:wrap;width:auto}html.nomotion .mq-track span{w
   <a href="#registros" data-v="registros"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg>Registros</a>
   <a href="#perfil" data-v="perfil"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Perfil</a>
 </nav>
+<input type="file" id="bImport" style="display:none">
 <div class="toast" id="toast"></div>
 
 <script>
@@ -478,6 +517,7 @@ const DAY = 864e5;
 let editing = null;   // lectura en edición {k, t}
 let recOpen = false;  // recomendaciones expandidas
 let gtab = 'glu';     // pestaña de gráficas
+let openSched = null; // medicamento con el formulario de horario abierto
 const S = { days:{}, meds:[], weights:[], settings:{type:'2', fastMax:130, postMax:180, bedMax:150, act:'sed'}, range:7 };
 
 /* Clasifica una lectura según el momento en que se tomó */
@@ -649,7 +689,6 @@ async function exportBackup(){
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
   toast('Respaldo descargado');
 }
-$('#bExport').addEventListener('click', exportBackup);
 document.addEventListener('click', e => { if (e.target.closest('[data-export]')) exportBackup(); });
 $('#bImport').addEventListener('change', async e => {
   const f = e.target.files[0]; if (!f) return;
@@ -853,13 +892,12 @@ function renderHome(){
   $('#avoid').innerHTML = fp.avoid.map(x=>'<li>'+esc(x)+'</li>').join('');
   const day = S.days[dKey(Date.now())], taken = (day && day.taken) || {};
   const doses = dosesToday(), done = doses.filter(d => taken[d.key]).length, hm = nowHM();
-  $('#todayMeds').innerHTML = '<h3>Pastillas y medicamentos de hoy'+(doses.length?' · '+done+' de '+doses.length:'')+'</h3>' + (doses.length ? doses.map(d => {
+  $('#todayMeds').innerHTML = '<div class="row" style="justify-content:space-between;margin-bottom:4px"><h3 style="margin:0">Pastillas de hoy</h3>'+(doses.length?'<span class="pill '+(done===doses.length?'ok':'high')+'">'+done+' de '+doses.length+'</span>':'')+'</div>' + (doses.length ? doses.map(d => {
     const late = d.time && d.time <= hm && !taken[d.key];
-    return '<div class="dose'+(late?' late':'')+'"><span class="hr">'+(d.time?fmtHM(d.time):'—')+'</span><div class="info"><b>'+esc(d.m.name)+'</b> <span class="note">'+esc((d.s&&d.s.dose)||d.m.dose||'')+(d.s&&d.s.note?' · '+esc(d.s.note):'')+'</span>'+
+    return '<div class="dose'+(late?' late':'')+'"><span class="hr">'+(d.time?fmtHM(d.time):'—')+'</span><div class="info"><b>'+esc(d.m.name)+'</b> <div class="note" style="margin:0">'+esc((d.s&&d.s.dose)||d.m.dose||'')+(d.s&&d.s.note?' · '+esc(d.s.note):'')+'</div>'+
       (taken[d.key]?'<div class="taken">✓ Ya la tomaste</div>':late?'<div class="taken" style="color:var(--alert)">Pendiente</div>':'')+
       '</div><label class="chk"><input type="checkbox" data-take="'+esc(d.key)+'" '+(taken[d.key]?'checked':'')+' aria-label="Tomado '+esc(d.m.name)+' '+d.time+'"></label></div>'; }).join('')
-    : '<p class="note">Aún no agregas medicamentos. <a href="#meds" style="color:var(--teal);font-weight:700">Agregar mis pastillas</a></p>');
-  $('#goalChips').innerHTML = ['ayunas','antes','despues','dormir'].map(c => '<span>'+esc(CTX[c])+': '+(c==='despues'?'menos de ':'hasta ')+goalMax(c)+'</span>').join('');
+    : '<p class="note" style="margin-bottom:0">Aún no agregas medicamentos. <a href="#meds" style="font-weight:700">Agregar mis pastillas</a></p>');
   updateTarget('r'); updateTarget('x');
   renderMarquee();
   $('#restoreHint').style.display = (!allReadings().length && !S.meds.length && !S.weights.length) ? '' : 'none';
@@ -896,20 +934,23 @@ function renderList(){
   $('#list').innerHTML = keys.map(k => {
     const es = [...S.days[k].entries].sort((a,b)=>b.t-a.t);
     const shown = es.length > 30 ? es.filter((_,i)=>i%Math.ceil(es.length/24)===0) : es;
-    return '<div class="dayh">'+fmtD(k)+' · promedio '+Math.round(avg(es))+' mg/dL'+(es.length>30?' · '+es.length+' lecturas del sensor (muestra)':'')+'</div>' +
-      shown.map(e => { if (editing && editing.t===e.t && editing.k===k) return inlineForm(k, e); const [cls,txt] = status(e.v,e.c); return '<div class="entry"><div><div class="v">'+e.v+' <span class="pill '+cls+'">'+txt+'</span></div><div class="m">'+fmtT(e.t)+' · '+CTX[e.c]+(e.n?' · '+esc(e.n):'')+'</div></div><div class="row" style="flex-wrap:nowrap;gap:6px"><button class="ghost sm" data-redit="'+k+'|'+e.t+'">Editar</button><button class="ghost sm" data-del="'+k+'|'+e.t+'">Borrar</button></div></div>'; }).join('');
+    return '<div class="dayh"><b>'+fmtD(k)+'</b><span>'+(es.length>30?es.length+' del sensor · ':es.length+(es.length===1?' lectura · ':' lecturas · '))+'prom. '+Math.round(avg(es))+'</span></div>' +
+      shown.map(e => { if (editing && editing.t===e.t && editing.k===k) return inlineForm(k, e); const [cls,txt] = status(e.v,e.c); return '<div class="entry"><div><div class="v">'+e.v+' <span class="pill '+cls+'">'+txt+'</span></div><div class="m">'+fmtT(e.t)+' · '+CTX[e.c]+(e.n?' · '+esc(e.n):'')+'</div></div><div class="row"><button class="ghost sm" data-redit="'+k+'|'+e.t+'">Editar</button><button class="ghost sm" data-del="'+k+'|'+e.t+'">Borrar</button></div></div>'; }).join('');
   }).join('');
 }
 function renderMeds(){
   const KIND = {oral:'Oral', insulina:'Insulina', inyectable:'Inyectable', otro:'Otro'};
-  $('#medList').innerHTML = '<h3>Mis medicamentos</h3>' + (S.meds.length ? S.meds.map(m =>
-    '<div class="medcard" id="med-'+esc(m.id)+'"><div class="medhead"><div><b style="font-size:18px">'+esc(m.name)+'</b><div class="note">'+esc(m.dose||'Sin dosis')+' · '+esc(KIND[m.kind]||'')+(m.notes?' · '+esc(m.notes):'')+'</div></div>'+
-    '<div class="row"><button class="ghost sm" data-edit="'+esc(m.id)+'">Editar</button><button class="ghost sm" data-mdel="'+esc(m.id)+'">Quitar</button></div></div>'+
-    '<div style="margin-top:10px">'+(m.sched.length ? m.sched.map(s =>
-      '<div class="sched"><div><span class="hr">'+esc(fmtHM(s.time))+'</span> <span class="note">'+esc(s.dose||m.dose||'')+(s.note?' · '+esc(s.note):'')+'</span></div><button class="ghost sm" data-sdel="'+esc(m.id)+'|'+esc(s.id)+'">Quitar</button></div>').join('')
-      : '<p class="note" style="margin:0">Sin horarios todavía. Agrega el primero:</p>')+'</div>'+
-    '<form class="addsched" data-addsched="'+esc(m.id)+'"><div><label>Hora</label><select name="hh" aria-label="Hora"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8" selected>8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></div><div><label>Min</label><select name="mm" aria-label="Minutos"><option value="00">00</option><option value="05">05</option><option value="10">10</option><option value="15">15</option><option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option><option value="40">40</option><option value="45">45</option><option value="50">50</option><option value="55">55</option></select></div><div><label>&nbsp;</label><select name="ap" aria-label="a.m. o p.m."><option value="am">a.m.</option><option value="pm">p.m.</option></select></div><div class="ds"><label>Dosis (opcional)</label><input name="dose" maxlength="30" placeholder="'+esc(m.dose||'Ej. 1 tableta')+'"></div><button type="submit">+ Agregar horario</button></form></div>').join('')
-    : '<p class="note">Todavía no agregas medicamentos. Usa el formulario de abajo.</p>');
+  $('#medList').innerHTML = S.meds.length ? S.meds.map(m =>
+    '<div class="medcard" id="med-'+esc(m.id)+'"><div class="medhead"><div><b>'+esc(m.name)+'</b><div class="note" style="margin:2px 0 0">'+esc(m.dose||'Sin dosis')+' · '+esc(KIND[m.kind]||'')+(m.notes?' · '+esc(m.notes):'')+'</div></div>'+
+    '<div class="row" style="flex-wrap:nowrap;gap:6px"><button class="ghost sm" data-edit="'+esc(m.id)+'">Editar</button><button class="ghost sm" data-mdel="'+esc(m.id)+'">Quitar</button></div></div>'+
+    (m.sched.length ? '<div class="scheds">'+m.sched.map(s =>
+      '<div class="sched"><div><span class="hr">'+esc(fmtHM(s.time))+'</span> <span class="note" style="margin:0">'+esc(s.dose||m.dose||'')+'</span></div><button class="link" data-sdel="'+esc(m.id)+'|'+esc(s.id)+'" style="color:var(--soft)">Quitar</button></div>').join('')+'</div>'
+      : '<p class="note" style="margin:8px 0 0">Sin horarios todavía.</p>')+
+    (openSched === m.id
+      ? '<form class="addsched" data-addsched="'+esc(m.id)+'"><div><label>Hora</label><select name="hh" aria-label="Hora"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8" selected>8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></div><div><label>Min</label><select name="mm" aria-label="Minutos"><option value="00">00</option><option value="05">05</option><option value="10">10</option><option value="15">15</option><option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option><option value="40">40</option><option value="45">45</option><option value="50">50</option><option value="55">55</option></select></div><div><label>a.m./p.m.</label><select name="ap" aria-label="a.m. o p.m."><option value="am">a.m.</option><option value="pm">p.m.</option></select></div><div class="ds"><label>Dosis (opcional)</label><input name="dose" maxlength="30" placeholder="'+esc(m.dose||'Ej. 1 tableta')+'"></div><div class="btns"><button type="submit">Guardar</button><button type="button" class="ghost" data-closesched="1">Cancelar</button></div></form>'
+      : '<button class="ghost openSched" data-opensched="'+esc(m.id)+'">+ Agregar horario</button>')+
+    '</div>').join('')
+    : '<h3>Aún no tienes medicamentos</h3><p class="note" style="margin-bottom:0">Agrega tu primer medicamento con el botón de abajo y después sus horarios.</p>';
 }
 
 /* ---------- Pastillas: historial de tomas por día ---------- */
@@ -1130,7 +1171,7 @@ function renderCharts(){
 /* ---------- Configuración de la app ---------- */
 const UI_DEF = {theme:'auto', big:false, gap:30, mq:true, mqSpeed:'normal', noMotion:false, recs:3, food:false};
 const ui = () => ({...UI_DEF, ...(S.settings.ui || {})});
-const APP_VER = '15';
+const APP_VER = '16';
 function applyUI(){
   const u = ui(), root = document.documentElement;
   if (u.theme === 'auto') delete root.dataset.theme; else root.dataset.theme = u.theme;
@@ -1250,6 +1291,9 @@ async function updateReading(old, r){
   }
   return true;
 }
+function showManual(on){ $('#manualCard').classList.toggle('hidden', !on); $('#xOpen').classList.toggle('hidden', on); if (on){ $('#manualCard').scrollIntoView({behavior:'smooth', block:'start'}); setTimeout(()=>$('#xVal').focus(), 300); } }
+$('#xOpen').addEventListener('click', () => showManual(true));
+$('#xClose').addEventListener('click', () => showManual(false));
 function setManualNow(){
   const d = new Date();
   $('#xDate').value = dKey(d.getTime());
@@ -1308,10 +1352,13 @@ document.addEventListener('click', async e => {
     if (del.dataset.armed){ const [k,t] = del.dataset.del.split('|'); if (editing && editing.t === +t) endEdit(); await delReading(k, +t); toast('Lectura borrada'); }
     else { del.dataset.armed = 1; del.textContent = '¿Seguro?'; del.classList.add('danger'); setTimeout(()=>{ if (del.isConnected){ delete del.dataset.armed; del.textContent='Borrar'; del.classList.remove('danger'); } }, 3000); }
   }
+  const os = e.target.closest('[data-opensched]');
+  if (os){ openSched = os.dataset.opensched; renderMeds(); const f = document.querySelector('form[data-addsched]'); f && f.scrollIntoView({behavior:'smooth', block:'center'}); return; }
+  if (e.target.closest('[data-closesched]')){ openSched = null; renderMeds(); return; }
   const ed = e.target.closest('[data-edit]');
   if (ed){ const m = S.meds.find(x=>x.id===ed.dataset.edit); if (!m) return;
     $('#mId').value = m.id; $('#mName').value = m.name; $('#mDose').value = m.dose||''; $('#mKind').value = m.kind||'oral'; $('#mNotes').value = m.notes||'';
-    $('#medFormT').textContent = 'Editar medicamento'; $('#mCancel').style.display = ''; $('#mName').focus(); }
+    $('#medFormT').textContent = 'Editar medicamento'; showMedForm(true); $('#mName').focus(); }
   const md = e.target.closest('[data-mdel]');
   if (md){
     if (md.dataset.armed){ S.meds = S.meds.filter(x=>x.id!==md.dataset.mdel); renderAll(); await save('meds',{list:S.meds}); }
@@ -1348,10 +1395,12 @@ document.addEventListener('submit', async e => {
   if (m.sched.some(s=>s.time===time)) return toast('Ese horario ya existe');
   m.sched.push({id:'s'+Date.now().toString(36), time, dose:f.dose.value.trim(), note:''});
   m.sched.sort((a,b)=>a.time.localeCompare(b.time));
-  renderAll(); toast('Horario agregado: '+fmtHM(time));
+  openSched = null; renderAll(); toast('Horario agregado: '+fmtHM(time));
   await save('meds', {list:S.meds});
 });
-const resetMed = () => { $('#fMed').reset(); $('#mId').value=''; $('#medFormT').textContent='Agregar medicamento'; $('#mCancel').style.display='none'; };
+function showMedForm(on){ $('#medFormCard').classList.toggle('hidden', !on); $('#mOpen').classList.toggle('hidden', on); if (on) $('#medFormCard').scrollIntoView({behavior:'smooth', block:'start'}); }
+const resetMed = () => { $('#fMed').reset(); $('#mId').value=''; $('#medFormT').textContent='Agregar medicamento'; showMedForm(false); };
+$('#mOpen').addEventListener('click', () => { resetMed(); showMedForm(true); $('#mName').focus(); });
 $('#mCancel').addEventListener('click', resetMed);
 $('#fMed').addEventListener('submit', async e => {
   e.preventDefault();
@@ -1361,7 +1410,7 @@ $('#fMed').addEventListener('submit', async e => {
   const i = S.meds.findIndex(x=>x.id===m.id); if (i>=0) S.meds[i] = m; else S.meds.push(m);
   resetMed(); renderAll();
   toast(prev ? 'Medicamento actualizado' : 'Listo, ahora agrégale sus horarios');
-  if (!prev){ const c = document.getElementById('med-'+id); if (c){ c.scrollIntoView({behavior:'smooth', block:'center'}); setTimeout(()=>{ const t = c.querySelector('input[type=time]'); t && t.focus(); }, 400); } }
+  if (!prev){ openSched = id; renderMeds(); const c = document.getElementById('med-'+id); if (c) c.scrollIntoView({behavior:'smooth', block:'center'}); }
   await save('meds', {list:S.meds});
 });
 
