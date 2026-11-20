@@ -1291,7 +1291,7 @@ async function updateReading(old, r){
   }
   return true;
 }
-function showManual(on){ $('#manualCard').classList.toggle('hidden', !on); $('#xOpen').classList.toggle('hidden', on); if (on){ $('#manualCard').scrollIntoView({behavior:'smooth', block:'start'}); setTimeout(()=>$('#xVal').focus(), 300); } }
+function showManual(on){ $('#manualCard').classList.toggle('hidden', !on); if (on){ $('#manualCard').scrollIntoView({behavior:'smooth', block:'start'}); setTimeout(()=>$('#xVal').focus(), 300); } }
 $('#xOpen').addEventListener('click', () => showManual(true));
 $('#xClose').addEventListener('click', () => showManual(false));
 function setManualNow(){
