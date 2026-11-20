@@ -42,9 +42,11 @@ h3{font-size:17px;margin:0 0 6px}
 .hero .lbl{color:var(--aqua);font-size:14px;font-weight:600}
 .big{font-size:clamp(56px,16vw,88px);font-weight:800;line-height:1;letter-spacing:-.03em}
 .big span{font-size:18px;font-weight:600;color:var(--aqua);margin-left:6px}
-.scale{position:relative;height:12px;border-radius:6px;margin:18px 0 6px;background:linear-gradient(90deg,var(--alert) 0 8%,var(--warn) 8% 12%,var(--aqua) 12% 40%,var(--teal) 40% 57%,var(--warn) 57% 72%,var(--alert) 72%)}
-.scale i{position:absolute;top:-6px;width:4px;height:24px;background:#fff;border-radius:2px;box-shadow:0 0 0 2px var(--navy);transition:left .5s}
-.ticks{display:flex;justify-content:space-between;font-size:13px;color:var(--aqua)}
+.scale{position:relative;height:12px;border-radius:6px;margin:18px 0 8px;background:linear-gradient(90deg,var(--alert) 0 25%,var(--aqua) 25% 50%,var(--warn) 50% 75%,var(--alert) 75% 100%)}
+.scale i{position:absolute;top:-6px;width:4px;height:24px;margin-left:-2px;background:#fff;border-radius:2px;box-shadow:0 0 0 2px var(--navy);transition:left .5s}
+.ticks{position:relative;height:20px;font-size:13px;color:var(--aqua)}
+.ticks span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
+.ticks span:first-child{transform:none}.ticks span:last-child{transform:translateX(-100%)}
 .pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:13px;font-weight:700;white-space:nowrap}
 .ok{background:var(--aqua);color:var(--navy)}.low,.crit{background:var(--alert);color:#fff}.high{background:var(--warn);color:var(--navy)}.vhigh{background:var(--alert);color:#fff}
 label{display:block;font-size:14px;font-weight:600;color:var(--soft);margin-bottom:4px}
@@ -173,7 +175,7 @@ header{padding-top:max(18px,env(safe-area-inset-top))}
     <div class="big" id="lastVal">—<span>mg/dL</span></div>
     <div style="margin-top:8px" id="lastPill"></div>
     <div class="scale"><i id="marker" style="left:0"></i></div>
-    <div class="ticks"><span>40</span><span>70</span><span>180</span><span>250</span><span>400</span></div>
+    <div class="ticks"><span style="left:0">40</span><span style="left:25%">70</span><span style="left:50%">180</span><span style="left:75%">250</span><span style="left:100%">400</span></div>
   </div>
 
   <div class="marquee" id="marquee" aria-label="Mensajes de motivación"><div class="mq-track" id="mqTrack"></div></div>
@@ -381,7 +383,7 @@ function status(v, c){
   const lim = goalMax(c);
   if (v <= lim) return ['ok','En meta'];
   if (v <= 250) return ['high','Alta'];
-  return ['vhigh', v >= 300 ? 'Muy alta' : 'Alta'];
+  return ['vhigh','Muy alta'];
 }
 const allReadings = () => Object.entries(S.days).flatMap(([k,d]) => (d.entries||[]).map(e => ({...e,k}))).sort((a,b)=>a.t-b.t);
 const inRange = (rs, days) => { const from = Date.now() - days*DAY; return rs.filter(r => r.t >= from); };
@@ -655,6 +657,14 @@ function renderMarquee(){
   $('#mqTrack').style.setProperty('--mqdur', Math.max(60, msgs.length * 9) + 's');
 }
 
+/* Posición en la barra: cada tramo (40–70, 70–180, 180–250, 250–400) ocupa 25 % */
+function scalePos(v){
+  const pts = [40, 70, 180, 250, 400];
+  v = Math.min(400, Math.max(40, v));
+  for (let i = 0; i < 4; i++) if (v <= pts[i+1]) return (i + (v - pts[i]) / (pts[i+1] - pts[i])) * 25;
+  return 100;
+}
+
 /* ---------- Medidas corporales ---------- */
 function body(){
   const cm = +S.settings.height || 0, w = S.weights, last = w[w.length-1];
@@ -674,7 +684,7 @@ function renderHome(){
     $('#lastVal').innerHTML = last.v + '<span>mg/dL</span>';
     $('#lastWhen').textContent = 'Última lectura · ' + fmtD(last.k) + ', ' + fmtT(last.t) + ' · ' + CTX[last.c];
     $('#lastPill').innerHTML = '<span class="pill '+cls+'">'+txt+'</span>';
-    $('#marker').style.left = 'calc(' + Math.max(0, Math.min(100, (last.v-40)/360*100)) + '% - 2px)';
+    $('#marker').style.left = scalePos(last.v) + '%';
   }
   $('#recs').innerHTML = recommendations().map(r => '<div class="card rec '+r.lvl+'"><h3>'+esc(r.t)+'</h3><p>'+esc(r.b)+'</p></div>').join('');
   const fp = foodPlan();
