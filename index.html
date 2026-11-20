@@ -728,10 +728,27 @@ function renderCharts(){
     for (const v of [70,180,250]) g += '<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="var(--line)" stroke-dasharray="'+(v===250?'4 4':'0')+'"/><text x="'+(L-6)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="12" fill="var(--soft)">'+v+'</text>';
     const step = W < 520 ? Math.ceil(days/4) : Math.ceil(days/7);
     for (let i=days; i>=0; i-=step){ const t = x1 - i*DAY; g += '<text x="'+X(t)+'" y="'+(H-6)+'" text-anchor="middle" font-size="12" fill="var(--soft)">'+new Date(t).toLocaleDateString('es-MX',{day:'numeric',month:'short'})+'</text>'; }
-    let d = '', prev = null;
-    for (const r of rs){ d += (prev && r.t - prev > 3*3600e3 ? 'M' : (d?'L':'M')) + X(r.t).toFixed(1)+','+Y(r.v).toFixed(1); prev = r.t; }
-    g += '<path d="'+d+'" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linejoin="round"/>';
-    if (rs.length < 300) g += rs.map(r => { const c = status(r.v,r.c)[0]; const f = c==='ok'?'var(--aqua)':c==='high'?'var(--warn)':'var(--alert)'; return '<circle cx="'+X(r.t).toFixed(1)+'" cy="'+Y(r.v).toFixed(1)+'" r="4" fill="'+f+'" stroke="var(--card)" stroke-width="1.5"/>'; }).join('');
+    // Línea continua y suave que une todas las lecturas (curva monótona, sin picos falsos)
+    const P = rs.map(r => [X(r.t), Y(r.v)]);
+    let d = 'M' + P[0][0].toFixed(1) + ',' + P[0][1].toFixed(1);
+    if (P.length > 400) for (let i = 1; i < P.length; i++) d += 'L' + P[i][0].toFixed(1) + ',' + P[i][1].toFixed(1);
+    else {
+      const n = P.length, m = new Array(n).fill(0), dl = [];
+      for (let i = 0; i < n-1; i++){ const dx = P[i+1][0]-P[i][0] || 1e-6; dl.push((P[i+1][1]-P[i][1]) / dx); }
+      for (let i = 1; i < n-1; i++) m[i] = dl[i-1]*dl[i] <= 0 ? 0 : (dl[i-1]+dl[i]) / 2;
+      if (n > 1){ m[0] = dl[0]; m[n-1] = dl[n-2]; }
+      for (let i = 0; i < n-1; i++){
+        const dx = (P[i+1][0]-P[i][0]) / 3;
+        d += 'C' + (P[i][0]+dx).toFixed(1) + ',' + (P[i][1]+m[i]*dx).toFixed(1) + ' ' + (P[i+1][0]-dx).toFixed(1) + ',' + (P[i+1][1]-m[i+1]*dx).toFixed(1) + ' ' + P[i+1][0].toFixed(1) + ',' + P[i+1][1].toFixed(1);
+      }
+    }
+    const baseY = Y(40), last = P[P.length-1], lr = rs[rs.length-1];
+    g += '<defs><linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--teal)" stop-opacity=".28"/><stop offset="1" stop-color="var(--teal)" stop-opacity="0"/></linearGradient></defs>';
+    if (P.length > 1) g += '<path d="' + d + 'L' + last[0].toFixed(1) + ',' + baseY + 'L' + P[0][0].toFixed(1) + ',' + baseY + 'Z" fill="url(#gArea)"/>';
+    g += '<path d="' + d + '" fill="none" stroke="var(--teal)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>';
+    // Solo se marca la última lectura con su valor
+    g += '<circle cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="5" fill="var(--navy)" stroke="var(--card)" stroke-width="2"/>';
+    g += '<text x="' + Math.min(last[0], W-R-4).toFixed(1) + '" y="' + Math.max(last[1]-10, 14).toFixed(1) + '" text-anchor="end" font-size="13" font-weight="800" fill="var(--ink)">' + lr.v + '</text>';
     s.innerHTML = g;
   });
   const half = rs.length >= 6 ? [avg(rs.slice(0, rs.length/2|0)), avg(rs.slice(rs.length/2|0))] : null;
