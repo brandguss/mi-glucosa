@@ -86,7 +86,7 @@ button.danger{background:var(--alert)}
 .med:last-child{border-bottom:0}
 .chk{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--ink);margin:0}
 .chk input{width:24px;height:24px;min-height:0}
-nav{position:fixed;bottom:0;left:0;right:0;background:var(--navy);display:grid;grid-template-columns:repeat(4,1fr);padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:5}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--navy);display:grid;grid-template-columns:repeat(5,1fr);padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:5}
 nav a{color:#A9C3CC;text-decoration:none;font-size:12px;font-weight:600;text-align:center;padding:6px 2px;border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:48px;justify-content:center}
 nav a svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2}
 nav a.on{color:var(--navy);background:var(--aqua)}
@@ -101,6 +101,15 @@ nav a.on{color:var(--navy);background:var(--aqua)}
 #login .link{background:none;color:var(--aqua);min-height:40px;font-weight:600;font-size:15px}
 #loginErr{color:#FFB4AC;min-height:22px;font-size:14px;margin-top:8px}
 header{padding-top:max(18px,env(safe-area-inset-top))}
+.target{display:flex;justify-content:space-between;gap:10px;align-items:center;background:var(--band);border-radius:12px;padding:10px 12px;margin:0 0 12px;font-size:14px}
+.target b{font-size:18px;white-space:nowrap}
+.target.over{background:light-dark(#FBE3D3,#4A2A2A)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}
+.chips span{background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:4px 10px;font-size:13px;white-space:nowrap}
+.sub{border-top:1px solid var(--line);margin-top:16px;padding-top:14px}
+.taken{font-size:13px;color:var(--teal);font-weight:700;white-space:nowrap}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media(max-width:480px){.grid3{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--teal);color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;display:none;z-index:9;max-width:90vw}
 @media(max-width:480px){.lists{grid-template-columns:1fr}.hrow{grid-template-columns:6.5em minmax(0,1fr) 4em}}
 @media(prefers-reduced-motion:reduce){.scale i{transition:none}}
@@ -147,12 +156,16 @@ header{padding-top:max(18px,env(safe-area-inset-top))}
         <div class="field"><label for="rCtx">Momento</label>
           <select id="rCtx"><option value="ayunas">En ayunas</option><option value="antes">Antes de comer</option><option value="despues">2 h después de comer</option><option value="dormir">Antes de dormir</option><option value="sensor">Sensor (Dexcom/Libre)</option><option value="otro">Otro</option></select></div>
       </div>
+      <div class="target" id="rTarget"></div>
       <div class="grid2">
         <div class="field"><label for="rTime">Fecha y hora</label><input id="rTime" type="datetime-local" required></div>
         <div class="field"><label for="rNote">Nota (opcional)</label><input id="rNote" maxlength="120" placeholder="Ej. comí tamales"></div>
       </div>
       <button type="submit" style="width:100%">Guardar lectura</button>
     </form>
+    <div class="note" style="margin-top:12px">Tus metas (máximo recomendado):</div>
+    <div class="chips" id="goalChips"></div>
+    <div class="sub" id="todayMeds"></div>
   </div>
 
   <h2>Recomendaciones de hoy</h2>
@@ -161,7 +174,6 @@ header{padding-top:max(18px,env(safe-area-inset-top))}
     <h3>Plan de comida para hoy</h3>
     <div class="lists"><div><b style="color:var(--teal)">Prefiere</b><ul id="prefer"></ul></div><div><b style="color:var(--alert)">Hoy evita</b><ul id="avoid"></ul></div></div>
   </div>
-  <div class="card" id="todayMeds"></div>
   <p class="note">Esta app da orientación general basada en tus lecturas y en guías de diabetes; no reemplaza a tu médico. Nunca suspendas ni cambies un medicamento sin indicación médica.</p>
 </section>
 
@@ -219,17 +231,62 @@ header{padding-top:max(18px,env(safe-area-inset-top))}
       <div class="row"><button type="submit">Guardar</button><button type="button" class="ghost" id="mCancel" style="display:none">Cancelar</button></div>
     </form>
   </div>
-  <div class="card">
-    <h3>Mi perfil</h3>
-    <div class="field"><label for="sType">Tipo de diabetes</label><select id="sType"><option value="2">Tipo 2</option><option value="1">Tipo 1</option><option value="pre">Prediabetes</option><option value="otro">Otro / no sé</option></select></div>
-    <p class="note">Ajusta algunas recomendaciones (por ejemplo, revisar cetonas con glucosa muy alta).</p>
+  <p class="note">Si notas que un medicamento nuevo (por ejemplo, un corticoide como la prednisona) te sube la glucosa, coméntalo con tu médico; no lo suspendas por tu cuenta.</p>
+</section>
+
+<!-- PERFIL -->
+<section class="view" id="v-perfil">
+  <h2>Mi perfil</h2>
+  <div class="kpis">
+    <div class="kpi"><small>Peso actual</small><b id="pW">—</b><small id="pWd">kg</small></div>
+    <div class="kpi"><small>Índice de masa corporal</small><b id="pBmi">—</b><small id="pBmiC">agrega altura y peso</small></div>
+    <div class="kpi"><small>Peso saludable para tu altura</small><b id="pRange" style="font-size:22px">—</b><small>IMC 18.5 a 24.9</small></div>
+    <div class="kpi"><small>Primera meta (bajar 5 %)</small><b id="pGoal">—</b><small id="pGoalN">mejora tu glucosa</small></div>
   </div>
+
+  <div class="card">
+    <h3>Registrar peso</h3>
+    <form id="fWeight" class="grid2">
+      <div class="field"><label for="wKg">Peso (kg)</label><input id="wKg" type="number" inputmode="decimal" step="0.1" min="25" max="350" required placeholder="Ej. 92.5"></div>
+      <div class="field"><label for="wDate">Fecha</label><input id="wDate" type="date" required></div>
+      <button type="submit" style="grid-column:1/-1">Guardar peso</button>
+    </form>
+    <div class="fig short" style="margin-top:12px"><svg id="gWeight"></svg></div>
+    <p class="insight" id="iWeight"></p>
+    <div id="wList"></div>
+  </div>
+
+  <div class="card">
+    <h3>Datos personales</h3>
+    <form id="fProfile">
+      <div class="grid2">
+        <div class="field"><label for="pName">Nombre</label><input id="pName" maxlength="40" autocomplete="given-name"></div>
+        <div class="field"><label for="pBirth">Fecha de nacimiento</label><input id="pBirth" type="date"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label for="pHeight">Altura (cm)</label><input id="pHeight" type="number" inputmode="numeric" min="100" max="230" placeholder="Ej. 172"></div>
+        <div class="field"><label for="pSex">Sexo</label><select id="pSex"><option value="">Prefiero no decir</option><option value="h">Hombre</option><option value="m">Mujer</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label for="sType">Tipo de diabetes</label><select id="sType"><option value="2">Tipo 2</option><option value="1">Tipo 1</option><option value="pre">Prediabetes</option><option value="otro">Otro / no sé</option></select></div>
+        <div class="field"><label for="pAct">Actividad física</label><select id="pAct"><option value="sed">Casi nada (sedentario)</option><option value="lig">Ligera (caminar 1–3 días)</option><option value="mod">Moderada (4–5 días)</option><option value="alta">Alta (diario)</option></select></div>
+      </div>
+      <h3 style="margin-top:8px">Mis metas de glucosa (máximo)</h3>
+      <p class="note" style="margin-top:0">Vienen con las metas de la Asociación Americana de Diabetes. Si tu médico te dio otras, cámbialas aquí.</p>
+      <div class="grid3">
+        <div class="field"><label for="gFast">Ayunas y antes de comer</label><input id="gFast" type="number" inputmode="numeric" min="90" max="200"></div>
+        <div class="field"><label for="gPost">2 h después de comer</label><input id="gPost" type="number" inputmode="numeric" min="120" max="250"></div>
+        <div class="field"><label for="gBed">Antes de dormir</label><input id="gBed" type="number" inputmode="numeric" min="100" max="220"></div>
+      </div>
+      <button type="submit" style="width:100%">Guardar perfil</button>
+    </form>
+  </div>
+
   <div class="card">
     <h3>Cuenta</h3>
     <p class="note" style="margin-top:0" id="accInfo">Modo local: tus datos se guardan solo en este dispositivo.</p>
     <button class="ghost sm" id="logout" style="display:none">Cerrar sesión</button>
   </div>
-  <p class="note">Si notas que un medicamento nuevo (por ejemplo, un corticoide como la prednisona) te sube la glucosa, coméntalo con tu médico; no lo suspendas por tu cuenta.</p>
 </section>
 </main>
 
@@ -238,6 +295,7 @@ header{padding-top:max(18px,env(safe-area-inset-top))}
   <a href="#registros" data-v="registros"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg>Registros</a>
   <a href="#graficas" data-v="graficas"><svg viewBox="0 0 24 24"><path d="M3 20h18M6 16l4-6 4 3 5-8"/></svg>Gráficas</a>
   <a href="#meds" data-v="meds"><svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="7" rx="3.5" transform="rotate(-35 12 12.5)"/><path d="M10 7l5 8"/></svg>Medicinas</a>
+  <a href="#perfil" data-v="perfil"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Perfil</a>
 </nav>
 <div class="toast" id="toast"></div>
 
@@ -253,13 +311,22 @@ const fmtD = k => { const [y,m,d] = k.split('-').map(Number); return new Date(y,
 const DAY = 864e5;
 
 /* ---------- Estado ---------- */
-const S = { days:{}, meds:[], settings:{type:'2'}, range:7 };
+const S = { days:{}, meds:[], weights:[], settings:{type:'2', fastMax:130, postMax:180, bedMax:150, act:'sed'}, range:7 };
 
 /* Clasifica una lectura según el momento en que se tomó */
+/* Metas máximas por momento (ADA por defecto, editables en Perfil) */
+function goalMax(c){
+  const g = S.settings;
+  if (c === 'ayunas' || c === 'antes') return +g.fastMax || 130;
+  if (c === 'despues') return +g.postMax || 180;
+  if (c === 'dormir') return +g.bedMax || 150;
+  return 180;
+}
+const goalText = c => ({ayunas:'En ayunas: 80 a '+goalMax('ayunas'), antes:'Antes de comer: 80 a '+goalMax('antes'), despues:'2 h después de comer: menos de '+goalMax('despues'), dormir:'Antes de dormir: 90 a '+goalMax('dormir'), sensor:'Sensor: 70 a 180 la mayor parte del día', otro:'Rango general: 70 a 180'}[c]);
 function status(v, c){
   if (v < 54) return ['crit','Muy baja'];
   if (v < 70) return ['low','Baja'];
-  const lim = (c === 'ayunas' || c === 'antes') ? 130 : 180;
+  const lim = goalMax(c);
   if (v <= lim) return ['ok','En meta'];
   if (v <= 250) return ['high','Alta'];
   return ['vhigh', v >= 300 ? 'Muy alta' : 'Alta'];
@@ -292,6 +359,7 @@ function ingest(id, data){
   if (id.startsWith('d-')) S.days[id.slice(2)] = { entries:[...(data.entries||[])], taken:{...(data.taken||{})} };
   else if (id === 'meds') S.meds = [...(data.list||[])];
   else if (id === 'settings') S.settings = {...S.settings, ...data};
+  else if (id === 'weights') S.weights = [...(data.list||[])].sort((a,b)=>a.t-b.t);
 }
 function localDocs(){
   const out = {};
@@ -300,10 +368,10 @@ function localDocs(){
 }
 function loadLocal(){
   local = true;
-  S.days = {}; S.meds = [];
+  S.days = {}; S.meds = []; S.weights = [];
   const docs = localDocs();
   for (const id in docs) ingest(id, docs[id]);
-  $('#hello').textContent = 'Guardado en este dispositivo';
+  $('#hello').textContent = S.settings.name ? 'Hola, ' + S.settings.name.split(' ')[0] : 'Guardado en este dispositivo';
   $('#accInfo').textContent = 'Modo local: tus datos se guardan solo en este dispositivo. Descarga un respaldo de vez en cuando (sección Registros).';
   try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
   renderAll();
@@ -349,10 +417,10 @@ async function init(){
 
   auth.onAuthStateChanged(u => {
     if (unsub){ unsub(); unsub = null; }
-    if (!u){ local = true; col = null; S.days = {}; S.meds = []; renderAll(); $('#login').style.display = 'block'; $('#logout').style.display = 'none'; return; }
+    if (!u){ local = true; col = null; S.days = {}; S.meds = []; S.weights = []; renderAll(); $('#login').style.display = 'block'; $('#logout').style.display = 'none'; return; }
     $('#login').style.display = 'none'; $('#loginErr').textContent = '';
     local = false;
-    const name = (u.displayName || u.email || '').split(/[ @]/)[0];
+    const name = (S.settings.name || u.displayName || u.email || '').split(/[ @]/)[0];
     $('#hello').textContent = name ? 'Hola, ' + name : 'Sesión iniciada';
     $('#accInfo').textContent = 'Sesión iniciada como ' + (u.email || 'usuario') + '. Tus datos se sincronizan entre tus dispositivos.';
     $('#logout').style.display = '';
@@ -367,7 +435,7 @@ async function init(){
         const ld = localDocs();
         if (snap.empty && Object.keys(ld).length){ for (const id in ld) await save(id, ld[id]); toast('Se subieron tus datos de este dispositivo'); return; }
       }
-      S.days = {}; S.meds = [];
+      S.days = {}; S.meds = []; S.weights = [];
       snap.forEach(d => ingest(d.id, d.data() || {}));
       renderAll();
     }, () => { clearTimeout(timer); showBanner('No se pudo leer tu información. Revisa las reglas de Firestore o tu conexión.'); });
@@ -378,7 +446,7 @@ async function init(){
 function snapshotDocs(){
   const docs = {};
   for (const k in S.days) docs['d-'+k] = S.days[k];
-  docs.meds = {list:S.meds}; docs.settings = S.settings;
+  docs.meds = {list:S.meds}; docs.settings = S.settings; docs.weights = {list:S.weights};
   return docs;
 }
 $('#bExport').addEventListener('click', () => {
@@ -395,6 +463,8 @@ $('#bImport').addEventListener('change', async e => {
     const all = [];
     for (const id in j.docs) if (id.startsWith('d-')) for (const r of (j.docs[id].entries||[])) all.push(r);
     if (j.docs.meds && Array.isArray(j.docs.meds.list)){ for (const m of j.docs.meds.list) if (!S.meds.some(x=>x.id===m.id)) S.meds.push(m); await save('meds',{list:S.meds}); }
+    if (j.docs.weights && Array.isArray(j.docs.weights.list)){ for (const w of j.docs.weights.list) if (!S.weights.some(x=>dKey(x.t)===dKey(w.t))) S.weights.push(w); S.weights.sort((a,b)=>a.t-b.t); await save('weights',{list:S.weights}); }
+    if (j.docs.settings){ S.settings = {...S.settings, ...j.docs.settings}; await save('settings', S.settings); }
     const n = await addReadings(all);
     toast(n ? 'Respaldo restaurado' : 'Esos datos ya estaban registrados');
   }catch(x){ toast('El archivo no es un respaldo válido'); }
@@ -441,15 +511,30 @@ function recommendations(){
 
   if (a3 && a3 > 200 && last3.length >= 3) out.push({lvl:'warn',t:'Tu promedio de 3 días es de '+Math.round(a3)+' mg/dL',b:'Cuando el promedio se mantiene arriba de 200, normalmente el tratamiento necesita ajustarse: no es falta de voluntad. Agenda cita con tu médico esta semana y lleva el reporte de la sección Registros.'});
   if (a3 && ap && ap - a3 >= 10) out.push({lvl:'good',t:'Vas bajando '+Math.round(ap-a3)+' mg/dL',b:'Tu promedio de los últimos 3 días es menor que el de los 3 anteriores. Sigue así, el progreso cuenta aunque todavía no llegues a la meta.'});
-  const highFasting = today.filter(r => r.c==='ayunas' && r.v>130);
+  const highFasting = today.filter(r => r.c==='ayunas' && r.v>goalMax('ayunas'));
   if (highFasting.length) out.push({lvl:'info',t:'Ayuno alto',b:'Una cena más ligera y temprana (2–3 horas antes de dormir) y evitar postres en la noche suelen mejorar la glucosa de la mañana.'});
-  const highPost = today.filter(r => r.c==='despues' && r.v>180);
+  const highPost = today.filter(r => r.c==='despues' && r.v>goalMax('despues'));
   if (highPost.length) out.push({lvl:'info',t:'Subidas después de comer',b:'Come primero las verduras y la proteína, deja tortilla, arroz o pan al final y reduce la porción a la mitad.'});
 
   const day = S.days[dKey(Date.now())], taken = (day && day.taken) || {};
   const pending = S.meds.filter(m => !taken[m.id]);
-  if (S.meds.length && pending.length) out.push({lvl:'info',t:'Medicamentos pendientes hoy',b:pending.map(m=>m.name).join(', ')+'. Márcalos abajo cuando los tomes.'});
+  if (S.meds.length && pending.length) out.push({lvl:'info',t:'Medicamentos pendientes hoy',b:pending.map(m=>m.name).join(', ')+'. Márcalos en Registrar lectura cuando los tomes.'});
   if (today.length < 2) out.push({lvl:'info',t:'Mide más veces hoy',b:'Intenta medir en ayunas y 2 horas después de tu comida principal para ver qué alimentos te suben más.'});
+
+  // Recomendaciones según peso, altura y actividad
+  const b = body();
+  if (!b.kg || !b.cm) out.push({lvl:'info',t:'Completa tu perfil',b:'Agrega tu altura y tu peso en Perfil para recibir recomendaciones de agua, peso y actividad hechas para ti.'});
+  else {
+    if (b.bmi >= 25){
+      const goal = b.kg*0.95;
+      out.push({lvl:'info',t: b.bmi >= 30 ? 'Bajar un poco de peso baja mucho tu azúcar' : 'Tu peso también influye en tu glucosa',b:'Con un IMC de '+b.bmi.toFixed(1)+', bajar solo el 5 % (llegar a '+goal.toFixed(1)+' kg) mejora de forma clara la glucosa y la acción de tus medicamentos. Un ritmo sano es de 0.5 a 1 kg por semana.'});
+    }
+    if (b.trend != null && b.trend <= -0.5) out.push({lvl:'good',t:'Bajaste '+Math.abs(b.trend).toFixed(1)+' kg en el último mes',b:'Ese avance ayuda directamente a tu glucosa. ¡Sigue así!'});
+    const water = Math.min(3.5, Math.max(1.5, b.kg*0.033));
+    out.push({lvl:'info',t:'Agua para hoy: '+water.toFixed(1)+' litros',b:'Calculado con tu peso. El agua ayuda a eliminar el exceso de glucosa por la orina; con la glucosa alta pierdes más líquido. Si tu médico te limitó los líquidos (riñón o corazón), sigue su indicación.'});
+    const act = S.settings.act || 'sed';
+    if (act === 'sed' || act === 'lig') out.push({lvl:'info',t:'Meta de movimiento',b: act==='sed' ? 'Empieza con 10 minutos de caminata después de cada comida. Juntas suman 30 minutos al día y bajan las subidas de azúcar después de comer.' : 'Intenta llegar a 150 minutos por semana: 30 minutos, 5 días. Caminar después de comer es lo que más baja la glucosa.'});
+  }
   return out;
 }
 function foodPlan(){
@@ -458,9 +543,20 @@ function foodPlan(){
   const prefer = ['Agua natural (2 litros o más)','Verduras: nopales, calabacita, brócoli, ensalada','Proteína: huevo, pollo, pescado, queso panela','Frijoles o lentejas en porción pequeña','Fruta entera con cáscara (manzana, pera) en vez de jugo'];
   const avoid = ['Refrescos, jugos y bebidas azucaradas','Pan dulce, galletas y postres','Harinas refinadas: tortilla de harina, pan blanco','Bebidas energéticas y café con azúcar'];
   if (high){ prefer.unshift('Platos con la mitad de verduras'); avoid.push('Arroz, pasta y tortilla en porciones grandes','Alcohol','Fruta muy dulce (mango, plátano maduro, uvas)'); }
-  else prefer.push('Tortilla de maíz: 2 piezas por comida');
+  else prefer.push('Tortilla de maíz: '+(body().bmi >= 30 ? '1 a 2' : '2')+' piezas por comida');
   return {prefer, avoid};
 }
+
+/* ---------- Medidas corporales ---------- */
+function body(){
+  const cm = +S.settings.height || 0, w = S.weights, last = w[w.length-1];
+  const kg = last ? last.kg : 0, m = cm/100;
+  const bmi = kg && cm ? kg/(m*m) : 0;
+  const monthAgo = w.filter(x => x.t <= Date.now()-25*DAY).pop();
+  const trend = last && monthAgo ? last.kg - monthAgo.kg : (w.length >= 2 ? last.kg - w[0].kg : null);
+  return {cm, kg, bmi, trend, last};
+}
+const bmiCat = b => b < 18.5 ? 'Bajo peso' : b < 25 ? 'Peso saludable' : b < 30 ? 'Sobrepeso' : b < 35 ? 'Obesidad grado 1' : b < 40 ? 'Obesidad grado 2' : 'Obesidad grado 3';
 
 /* ---------- Render ---------- */
 function renderHome(){
@@ -477,9 +573,49 @@ function renderHome(){
   $('#prefer').innerHTML = fp.prefer.map(x=>'<li>'+esc(x)+'</li>').join('');
   $('#avoid').innerHTML = fp.avoid.map(x=>'<li>'+esc(x)+'</li>').join('');
   const day = S.days[dKey(Date.now())], taken = (day && day.taken) || {};
-  $('#todayMeds').innerHTML = '<h3>Medicamentos de hoy</h3>' + (S.meds.length ? S.meds.map(m =>
-    '<div class="med"><div><b>'+esc(m.name)+'</b> <span class="note">'+esc(m.dose||'')+' '+esc(m.times||'')+'</span></div><label class="chk"><input type="checkbox" data-take="'+esc(m.id)+'" '+(taken[m.id]?'checked':'')+'>Tomado</label></div>').join('')
-    : '<p class="note">Agrega tus medicamentos en la sección Medicinas para llevar el control diario.</p>');
+  const done = S.meds.filter(m => taken[m.id]).length;
+  $('#todayMeds').innerHTML = '<h3>Pastillas y medicamentos de hoy'+(S.meds.length?' · '+done+' de '+S.meds.length:'')+'</h3>' + (S.meds.length ? S.meds.map(m =>
+    '<div class="med"><div><b>'+esc(m.name)+'</b> <span class="note">'+esc(m.dose||'')+' '+esc(m.times||'')+'</span>'+(taken[m.id]?'<div class="taken">Tomado a las '+fmtT(taken[m.id])+'</div>':'')+'</div><label class="chk"><input type="checkbox" data-take="'+esc(m.id)+'" '+(taken[m.id]?'checked':'')+'>Tomado</label></div>').join('')
+    : '<p class="note">Aún no agregas medicamentos. <a href="#meds" style="color:var(--teal);font-weight:700">Agregar mis pastillas</a></p>');
+  $('#goalChips').innerHTML = ['ayunas','antes','despues','dormir'].map(c => '<span>'+esc(CTX[c])+': '+(c==='despues'?'menos de ':'hasta ')+goalMax(c)+'</span>').join('');
+  updateTarget();
+}
+/* Muestra la meta del momento elegido y avisa si el valor escrito la pasa */
+function updateTarget(){
+  const c = $('#rCtx').value, v = +$('#rVal').value, max = goalMax(c), box = $('#rTarget');
+  const over = v && v > max, low = v && v < 70;
+  box.className = 'target' + (over || low ? ' over' : '');
+  box.innerHTML = '<span>'+esc(goalText(c))+' mg/dL'+(over?'<br><b style="font-size:14px;color:var(--alert)">'+(v-max)+' arriba de tu máximo</b>':low?'<br><b style="font-size:14px;color:var(--alert)">Abajo de 70: glucosa baja</b>':'')+'</span><b>máx. '+max+'</b>';
+}
+function renderProfile(){
+  const g = S.settings, b = body();
+  for (const [id,k] of [['pName','name'],['pBirth','birth'],['pHeight','height'],['pSex','sex'],['sType','type'],['pAct','act'],['gFast','fastMax'],['gPost','postMax'],['gBed','bedMax']])
+    if (document.activeElement !== $('#'+id)) $('#'+id).value = g[k] ?? '';
+  $('#pW').textContent = b.kg ? b.kg.toFixed(1) : '—';
+  $('#pWd').textContent = b.last ? 'kg · ' + fmtD(dKey(b.last.t)) : 'kg';
+  $('#pBmi').textContent = b.bmi ? b.bmi.toFixed(1) : '—';
+  $('#pBmiC').textContent = b.bmi ? bmiCat(b.bmi) : 'agrega altura y peso';
+  const m = b.cm/100;
+  $('#pRange').textContent = b.cm ? (18.5*m*m).toFixed(0)+'–'+(24.9*m*m).toFixed(0)+' kg' : '—';
+  const first = S.weights[0];
+  const base = first ? first.kg : b.kg;
+  $('#pGoal').textContent = base && b.bmi >= 25 ? (base*0.95).toFixed(1)+' kg' : b.bmi ? 'Mantener' : '—';
+  $('#pGoalN').textContent = base && b.bmi >= 25 ? (b.kg <= base*0.95 ? '¡Meta lograda!' : 'te faltan '+(b.kg-base*0.95).toFixed(1)+' kg') : 'mejora tu glucosa';
+  const ws = [...S.weights].reverse().slice(0, 8);
+  $('#wList').innerHTML = ws.map(w => '<div class="entry"><div><div class="v" style="font-size:18px">'+w.kg.toFixed(1)+' kg</div><div class="m">'+fmtD(dKey(w.t))+'</div></div><button class="ghost sm" data-wdel="'+w.t+'">Borrar</button></div>').join('');
+  $('#iWeight').textContent = S.weights.length >= 2 ? (b.trend < 0 ? 'Has bajado '+Math.abs(b.trend).toFixed(1)+' kg. Cada kilo cuenta para tu glucosa.' : b.trend > 0 ? 'Subiste '+b.trend.toFixed(1)+' kg. Revisa porciones y bebidas con azúcar.' : 'Tu peso se mantiene estable.') : 'Registra tu peso una vez por semana, en ayunas y a la misma hora.';
+  svgDraw('gWeight', (s, W, H) => {
+    const ws = S.weights.slice(-26);
+    if (ws.length < 2){ s.innerHTML = '<text x="'+W/2+'" y="'+H/2+'" text-anchor="middle" fill="var(--soft)" font-size="14">Registra al menos 2 pesos para ver la gráfica</text>'; return; }
+    const L = 40, R = 12, T = 12, B = 24, lo = Math.min(...ws.map(w=>w.kg))-2, hi = Math.max(...ws.map(w=>w.kg))+2;
+    const X = i => L + i/(ws.length-1)*(W-L-R), Y = v => T + (1-(v-lo)/(hi-lo))*(H-T-B);
+    let g = '';
+    for (const v of [lo+2, (lo+hi)/2, hi-2]) g += '<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="var(--line)"/><text x="'+(L-6)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="12" fill="var(--soft)">'+v.toFixed(0)+'</text>';
+    g += '<path d="'+ws.map((w,i)=>(i?'L':'M')+X(i).toFixed(1)+','+Y(w.kg).toFixed(1)).join('')+'" fill="none" stroke="var(--teal)" stroke-width="2.5"/>';
+    g += ws.map((w,i)=>'<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(w.kg).toFixed(1)+'" r="4" fill="var(--aqua)" stroke="var(--card)" stroke-width="1.5"/>').join('');
+    g += '<text x="'+L+'" y="'+(H-6)+'" font-size="12" fill="var(--soft)">'+fmtD(dKey(ws[0].t))+'</text><text x="'+(W-R)+'" y="'+(H-6)+'" text-anchor="end" font-size="12" fill="var(--soft)">'+fmtD(dKey(ws[ws.length-1].t))+'</text>';
+    s.innerHTML = g;
+  });
 }
 function renderList(){
   const keys = Object.keys(S.days).filter(k => (S.days[k].entries||[]).length).sort().reverse().slice(0, 30);
@@ -495,7 +631,6 @@ function renderMeds(){
   $('#medList').innerHTML = '<h3>Mis medicamentos</h3>' + (S.meds.length ? S.meds.map(m =>
     '<div class="med"><div><b>'+esc(m.name)+'</b> · '+esc(m.dose||'')+'<div class="note">'+esc(m.times||'Sin horario')+' · '+esc(m.kind||'')+(m.notes?' · '+esc(m.notes):'')+'</div></div><div class="row"><button class="ghost sm" data-edit="'+esc(m.id)+'">Editar</button><button class="ghost sm" data-mdel="'+esc(m.id)+'">Quitar</button></div></div>').join('')
     : '<p class="note">Todavía no agregas medicamentos.</p>');
-  $('#sType').value = S.settings.type || '2';
 }
 
 /* ---------- Gráficas ---------- */
@@ -553,14 +688,15 @@ function renderCharts(){
   const dd = Array.from({length:Math.min(days,30)},(_,i)=>avg((S.days[dKey(Date.now()-i*DAY)]||{}).entries||[])).filter(x=>x!=null);
   $('#iDaily').textContent = dd.length ? dd.filter(x=>x<=180).length+' de '+dd.length+' días con promedio en meta (180 o menos).' : '';
 }
-function renderAll(){ renderHome(); renderList(); renderMeds(); if (location.hash==='#graficas') renderCharts(); }
+function renderAll(){ renderHome(); renderList(); renderMeds(); renderProfile(); if (location.hash==='#graficas') renderCharts(); }
 
 /* ---------- Navegación ---------- */
 function route(){
-  const v = (location.hash||'#inicio').slice(1), ok = ['inicio','registros','graficas','meds'].includes(v) ? v : 'inicio';
+  const v = (location.hash||'#inicio').slice(1), ok = ['inicio','registros','graficas','meds','perfil'].includes(v) ? v : 'inicio';
   document.querySelectorAll('.view').forEach(s => s.classList.toggle('on', s.id==='v-'+ok));
   document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.dataset.v===ok));
   if (ok==='graficas') renderCharts();
+  if (ok==='perfil') renderProfile();
   window.scrollTo(0,0);
 }
 window.addEventListener('hashchange', route);
@@ -568,6 +704,26 @@ window.addEventListener('hashchange', route);
 /* ---------- Eventos ---------- */
 const nowLocal = () => { const d = new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,16); };
 $('#rTime').value = nowLocal();
+$('#rCtx').addEventListener('change', updateTarget);
+$('#rVal').addEventListener('input', updateTarget);
+$('#wDate').value = dKey(Date.now());
+$('#fWeight').addEventListener('submit', async e => {
+  e.preventDefault();
+  const kg = Math.round(+$('#wKg').value*10)/10, [y,mo,d] = $('#wDate').value.split('-').map(Number), t = new Date(y,mo-1,d,8).getTime();
+  if (!(kg>=25 && kg<=350) || isNaN(t)) return toast('Revisa el peso y la fecha');
+  S.weights = S.weights.filter(w => dKey(w.t) !== dKey(t)).concat({t, kg}).sort((a,b)=>a.t-b.t);
+  $('#wKg').value = ''; renderAll(); toast('Peso guardado');
+  await save('weights', {list:S.weights});
+});
+$('#fProfile').addEventListener('submit', async e => {
+  e.preventDefault();
+  const num = (id, lo, hi, def) => { const v = +$('#'+id).value; return v>=lo && v<=hi ? v : def; };
+  S.settings = {...S.settings, name:$('#pName').value.trim(), birth:$('#pBirth').value, height:num('pHeight',100,230,''), sex:$('#pSex').value, type:$('#sType').value, act:$('#pAct').value,
+    fastMax:num('gFast',90,200,130), postMax:num('gPost',120,250,180), bedMax:num('gBed',100,220,150)};
+  renderAll(); toast('Perfil guardado');
+  if (S.settings.name && local) $('#hello').textContent = 'Hola, ' + S.settings.name.split(' ')[0];
+  await save('settings', S.settings);
+});
 $('#fRead').addEventListener('submit', async e => {
   e.preventDefault();
   const v = Math.round(+$('#rVal').value), t = new Date($('#rTime').value).getTime();
@@ -592,6 +748,11 @@ document.addEventListener('click', async e => {
     if (md.dataset.armed){ S.meds = S.meds.filter(x=>x.id!==md.dataset.mdel); renderAll(); await save('meds',{list:S.meds}); }
     else { md.dataset.armed = 1; md.textContent = '¿Quitar?'; md.classList.add('danger'); }
   }
+  const wd = e.target.closest('[data-wdel]');
+  if (wd){
+    if (wd.dataset.armed){ S.weights = S.weights.filter(w => w.t !== +wd.dataset.wdel); renderAll(); await save('weights',{list:S.weights}); }
+    else { wd.dataset.armed = 1; wd.textContent = '¿Seguro?'; wd.classList.add('danger'); }
+  }
   const rb = e.target.closest('#range button');
   if (rb){ S.range = +rb.dataset.d; document.querySelectorAll('#range button').forEach(b=>b.classList.toggle('on', b===rb)); renderCharts(); }
 });
@@ -600,7 +761,6 @@ document.addEventListener('change', async e => {
   if (tk){ const k = dKey(Date.now()); const day = S.days[k] || (S.days[k] = {entries:[], taken:{}});
     if (tk.checked) day.taken[tk.dataset.take] = Date.now(); else delete day.taken[tk.dataset.take];
     renderHome(); await save('d-'+k, day); }
-  if (e.target.id === 'sType'){ S.settings.type = e.target.value; renderHome(); await save('settings', S.settings); }
 });
 const resetMed = () => { $('#fMed').reset(); $('#mId').value=''; $('#medFormT').textContent='Agregar medicamento'; $('#mCancel').style.display='none'; };
 $('#mCancel').addEventListener('click', resetMed);
