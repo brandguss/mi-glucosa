@@ -83,6 +83,7 @@ button.danger{background:var(--alert)}
 .entry{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);align-items:center}
 .entry:last-child{border-bottom:0}
 .entry .v{font-size:22px;font-weight:800;white-space:nowrap}.entry .m{font-size:13px;color:var(--soft)}
+.entry.editing{background:var(--band);border-radius:12px;padding-inline:10px}
 .dayh{font-weight:700;margin:14px 0 2px;color:var(--teal)}
 .banner{background:var(--warn);color:var(--navy);padding:10px 14px;border-radius:12px;font-size:14px;margin-bottom:12px;display:none}
 .note{font-size:13px;color:var(--soft)}
@@ -198,7 +199,7 @@ header{padding-top:max(18px,env(safe-area-inset-top))}
 <section class="view" id="v-registros">
   <h2>Mis registros</h2>
   <div class="card">
-    <h3>Registrar lectura manual</h3>
+    <h3 id="xTitle">Registrar lectura manual</h3>
     <p class="note" style="margin-top:0">Captura lecturas de cualquier día y hora, por ejemplo las que anotaste en papel. La fecha se conserva para que agregues varias seguidas.</p>
     <form id="fManual">
       <div class="grid2">
@@ -213,7 +214,7 @@ header{padding-top:max(18px,env(safe-area-inset-top))}
         <div class="field"><label for="xAP">a.m. / p.m.</label><select id="xAP"><option value="am">a.m.</option><option value="pm">p.m.</option></select></div>
       </div>
       <div class="field"><label for="xNote">Nota (opcional)</label><input id="xNote" maxlength="120" placeholder="Ej. después del almuerzo"></div>
-      <button type="submit" style="width:100%">Guardar lectura</button>
+      <div class="grid2" id="xBtns" style="grid-template-columns:1fr"><button type="submit" id="xSubmit">Guardar lectura</button><button type="button" class="ghost" id="xCancel" style="display:none">Cancelar</button></div>
     </form>
   </div>
   <div class="card">
@@ -349,6 +350,7 @@ const fmtD = k => { const [y,m,d] = k.split('-').map(Number); return new Date(y,
 const DAY = 864e5;
 
 /* ---------- Estado ---------- */
+let editing = null;   // lectura en edición {k, t}
 const S = { days:{}, meds:[], weights:[], settings:{type:'2', fastMax:130, postMax:180, bedMax:150, act:'sed'}, range:7 };
 
 /* Clasifica una lectura según el momento en que se tomó */
@@ -687,7 +689,7 @@ function renderList(){
     const es = [...S.days[k].entries].sort((a,b)=>b.t-a.t);
     const shown = es.length > 30 ? es.filter((_,i)=>i%Math.ceil(es.length/24)===0) : es;
     return '<div class="dayh">'+fmtD(k)+' · promedio '+Math.round(avg(es))+' mg/dL'+(es.length>30?' · '+es.length+' lecturas del sensor (muestra)':'')+'</div>' +
-      shown.map(e => { const [cls,txt] = status(e.v,e.c); return '<div class="entry"><div><div class="v">'+e.v+' <span class="pill '+cls+'">'+txt+'</span></div><div class="m">'+fmtT(e.t)+' · '+CTX[e.c]+(e.n?' · '+esc(e.n):'')+'</div></div><button class="ghost sm" data-del="'+k+'|'+e.t+'">Borrar</button></div>'; }).join('');
+      shown.map(e => { const [cls,txt] = status(e.v,e.c); return '<div class="entry'+(editing && editing.t===e.t && editing.k===k?' editing':'')+'"><div><div class="v">'+e.v+' <span class="pill '+cls+'">'+txt+'</span></div><div class="m">'+fmtT(e.t)+' · '+CTX[e.c]+(e.n?' · '+esc(e.n):'')+'</div></div><div class="row" style="flex-wrap:nowrap;gap:6px"><button class="ghost sm" data-redit="'+k+'|'+e.t+'">Editar</button><button class="ghost sm" data-del="'+k+'|'+e.t+'">Borrar</button></div></div>'; }).join('');
   }).join('');
 }
 function renderMeds(){
@@ -778,6 +780,42 @@ $('#rVal').addEventListener('input', () => updateTarget('r'));
 $('#xCtx').addEventListener('change', () => updateTarget('x'));
 $('#xVal').addEventListener('input', () => updateTarget('x'));
 /* Hora actual en los selectores de 12 h del registro manual */
+/* ---------- Editar lecturas ---------- */
+function startEdit(k, t){
+  const e = (S.days[k]?.entries || []).find(x => x.t === t); if (!e) return;
+  editing = {k, t};
+  const d = new Date(t);
+  $('#xVal').value = e.v; $('#xCtx').value = e.c; $('#xNote').value = e.n || '';
+  $('#xDate').value = dKey(t);
+  $('#xHH').value = String((d.getHours() % 12) || 12); $('#xMM').value = pad(d.getMinutes()); $('#xAP').value = d.getHours() < 12 ? 'am' : 'pm';
+  $('#xTitle').textContent = 'Editar lectura'; $('#xSubmit').textContent = 'Guardar cambios';
+  $('#xCancel').style.display = ''; $('#xBtns').style.gridTemplateColumns = '';
+  updateTarget('x'); renderList();
+  $('#fManual').scrollIntoView({behavior:'smooth', block:'start'});
+}
+function endEdit(){
+  editing = null;
+  $('#xTitle').textContent = 'Registrar lectura manual'; $('#xSubmit').textContent = 'Guardar lectura';
+  $('#xCancel').style.display = 'none'; $('#xBtns').style.gridTemplateColumns = '1fr';
+  $('#xVal').value = ''; $('#xNote').value = ''; setManualNow(); updateTarget('x'); renderList();
+}
+async function updateReading(old, r){
+  const oldDay = S.days[old.k]; if (!oldDay) return false;
+  const nk = dKey(r.t);
+  const target = S.days[nk] || (S.days[nk] = {entries:[], taken:{}});
+  if (target.entries.some(x => x.t !== old.t && Math.abs(x.t - r.t) < 60000)) return false;   // otra lectura en ese minuto
+  const prev = oldDay.entries.find(x => x.t === old.t) || {};
+  oldDay.entries = oldDay.entries.filter(x => x.t !== old.t);
+  target.entries.push({...prev, ...r}); target.entries.sort((a,b)=>a.t-b.t);
+  renderAll();
+  await save('d-'+nk, target);
+  if (nk !== old.k){
+    if (!oldDay.entries.length && !Object.keys(oldDay.taken||{}).length){ delete S.days[old.k]; await remove('d-'+old.k); }
+    else await save('d-'+old.k, oldDay);
+  }
+  return true;
+}
+$('#xCancel').addEventListener('click', endEdit);
 function setManualNow(){
   const d = new Date();
   $('#xDate').value = dKey(d.getTime());
@@ -794,7 +832,15 @@ $('#fManual').addEventListener('submit', async e => {
   const t = new Date(y, mo-1, d, hh, +$('#xMM').value).getTime();
   if (!(v>=20 && v<=600) || isNaN(t)) return toast('Revisa el valor y la fecha');
   if (t > Date.now() + 5*60000) return toast('La fecha y hora no pueden ser en el futuro');
-  const n = await addReadings([{t, v, c:$('#xCtx').value, n:$('#xNote').value.trim(), s:'manual'}]);
+  const r = {t, v, c:$('#xCtx').value, n:$('#xNote').value.trim()};
+  if (editing){
+    const ok = await updateReading(editing, r);
+    if (!ok) return toast('Ya existe otra lectura en ese minuto');
+    const k = dKey(t); endEdit(); toast('Lectura actualizada');
+    const row = document.querySelector('[data-redit="'+k+'|'+t+'"]'); row && row.closest('.entry').scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+  const n = await addReadings([{...r, s:'manual'}]);
   if (!n) return toast('Ya existe una lectura en ese minuto');
   $('#xVal').value = ''; $('#xNote').value = ''; updateTarget('x'); $('#xVal').focus();
   toast('Guardada: ' + v + ' mg/dL · ' + fmtD(dKey(t)) + ', ' + fmtT(t));
@@ -827,9 +873,11 @@ $('#fRead').addEventListener('submit', async e => {
   toast('Lectura guardada'); window.scrollTo({top: $('#recs').offsetTop-80, behavior:'smooth'});
 });
 document.addEventListener('click', async e => {
+  const re = e.target.closest('[data-redit]');
+  if (re){ const [k, t] = re.dataset.redit.split('|'); startEdit(k, +t); return; }
   const del = e.target.closest('[data-del]');
   if (del){
-    if (del.dataset.armed){ const [k,t] = del.dataset.del.split('|'); await delReading(k, +t); toast('Lectura borrada'); }
+    if (del.dataset.armed){ const [k,t] = del.dataset.del.split('|'); if (editing && editing.t === +t) endEdit(); await delReading(k, +t); toast('Lectura borrada'); }
     else { del.dataset.armed = 1; del.textContent = '¿Seguro?'; del.classList.add('danger'); setTimeout(()=>{ if (del.isConnected){ delete del.dataset.armed; del.textContent='Borrar'; del.classList.remove('danger'); } }, 3000); }
   }
   const ed = e.target.closest('[data-edit]');
