@@ -110,7 +110,8 @@ nav a.on{color:var(--navy);background:var(--aqua)}
 #login .alt{background:var(--ice);color:var(--navy)}
 #login .link{background:none;color:var(--aqua);min-height:40px;font-weight:600;font-size:15px}
 #loginErr{color:#FFB4AC;min-height:22px;font-size:14px;margin-top:8px}
-header{padding-top:max(18px,env(safe-area-inset-top))}
+header{padding-top:max(18px,calc(env(safe-area-inset-top) + 30px))}
+@media(display-mode:browser){header{padding-top:max(18px,env(safe-area-inset-top))}}
 .target{display:flex;justify-content:space-between;gap:10px;align-items:center;background:var(--band);border-radius:12px;padding:10px 12px;margin:0 0 12px;font-size:14px}
 .target>span{flex:1}.target>b{font-size:18px;white-space:nowrap;flex:none}
 .target.over{background:light-dark(#FBE3D3,#4A2A2A)}
