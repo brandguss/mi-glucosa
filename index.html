@@ -71,7 +71,7 @@ button.danger{background:var(--alert)}
 .kpi b{display:block;font-size:28px;line-height:1.1}.kpi small{color:var(--soft);font-size:13px}
 .seg{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
 .seg button{background:var(--card);color:var(--ink);border:1px solid var(--line);min-height:40px;font-size:14px}
-.seg button.on{background:var(--navy);color:var(--ice);border-color:var(--navy)}
+.seg button.on{background:light-dark(var(--navy),var(--aqua));color:light-dark(var(--ice),var(--navy));border-color:transparent}
 .fig{position:relative;min-height:260px}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
 .fig.short{min-height:200px}
 .insight{font-size:15px;color:var(--soft);margin:8px 0 0}
@@ -110,7 +110,7 @@ nav a.on{color:var(--navy);background:var(--aqua)}
 #login .alt{background:var(--ice);color:var(--navy)}
 #login .link{background:none;color:var(--aqua);min-height:40px;font-weight:600;font-size:15px}
 #loginErr{color:#FFB4AC;min-height:22px;font-size:14px;margin-top:8px}
-header{padding-top:max(18px,calc(env(safe-area-inset-top) + 30px))}
+header{padding-top:max(18px,calc(env(safe-area-inset-top) + var(--topgap,30px)))}
 @media(display-mode:browser){header{padding-top:max(18px,env(safe-area-inset-top))}}
 .target{display:flex;justify-content:space-between;gap:10px;align-items:center;background:var(--band);border-radius:12px;padding:10px 12px;margin:0 0 12px;font-size:14px}
 .target>span{flex:1}.target>b{font-size:18px;white-space:nowrap;flex:none}
@@ -147,10 +147,25 @@ details.fold summary::after{content:"";width:9px;height:9px;border-right:2.5px s
 details.fold[open] summary::after{transform:rotate(-135deg);margin-top:4px}
 .gtabs{display:grid;grid-template-columns:repeat(3,1fr);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px;gap:4px;margin-bottom:12px}
 .gtabs button{background:transparent;color:var(--soft);min-height:40px;font-size:15px;border-radius:10px}
-.gtabs button.on{background:var(--navy);color:var(--ice)}
+.gtabs button.on{background:light-dark(var(--navy),var(--aqua));color:light-dark(var(--ice),var(--navy))}
 .gpane{display:none}.gpane.on{display:block}
 .seg.small button{min-height:34px;padding:4px 12px;font-size:13px}
 label.btnlike{display:flex;align-items:center;justify-content:center;margin:0;min-height:46px;padding:10px 16px;border-radius:12px;background:var(--teal);color:#fff;font-weight:700;font-size:16px;cursor:pointer;text-align:center}
+.gear{color:var(--ice);width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:12px}
+.gear:active,.gear.on{background:rgba(94,179,190,.25)}
+.opt{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.opt:last-child{border-bottom:0}
+.opt .txt{flex:1}.opt .txt b{display:block}.opt .txt span{font-size:13px;color:var(--soft)}
+.opt select{width:auto;min-width:9.5em}
+.switch{position:relative;width:52px;height:32px;flex:none}
+.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1;min-height:0}
+.switch i{position:absolute;inset:0;background:var(--line);border-radius:99px;transition:background .2s}
+.switch i::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.switch input:checked+i{background:var(--teal)}.switch input:checked+i::after{transform:translateX(20px)}
+input[type=range]{padding:0;min-height:32px;accent-color:var(--teal);background:transparent;border:0}
+html.bigtext body{zoom:1.12}
+html.nomotion *{animation:none!important;transition:none!important}
+html.nomotion .mq-track{flex-wrap:wrap;width:auto}html.nomotion .mq-track span{white-space:normal;padding:4px 16px}html.nomotion .mq-track span:nth-child(n+2){display:none}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--teal);color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;display:none;z-index:9;max-width:90vw}
 @media(max-width:480px){.lists{grid-template-columns:1fr}.hrow{grid-template-columns:6.5em minmax(0,1fr) 4em}}
 @media(prefers-reduced-motion:reduce){.scale i{transition:none}}
@@ -175,7 +190,8 @@ label.btnlike{display:flex;align-items:center;justify-content:center;margin:0;mi
   </div>
 </div>
 
-<header><div><h1>Mi Glucosa</h1><small id="hello">Conectando…</small></div><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 3C11 12 7 17 7 22a10 10 0 0 0 20 0c0-5-4-10-10-19z" fill="#5EB3BE"/><path d="M12 22a5 5 0 0 0 5 5" stroke="#0E1A4F" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg></header>
+<header><div style="display:flex;align-items:center;gap:10px"><svg width="30" height="30" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 3C11 12 7 17 7 22a10 10 0 0 0 20 0c0-5-4-10-10-19z" fill="#5EB3BE"/><path d="M12 22a5 5 0 0 0 5 5" stroke="#0E1A4F" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg><div><h1>Mi Glucosa</h1><small id="hello">Conectando…</small></div></div>
+<a href="#config" class="gear" aria-label="Configuración"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></a></header>
 <main>
 <div class="banner" id="banner"></div>
 
@@ -332,6 +348,47 @@ label.btnlike{display:flex;align-items:center;justify-content:center;margin:0;mi
     </form>
   </div>
   <p class="note">Si notas que un medicamento nuevo (por ejemplo, un corticoide como la prednisona) te sube la glucosa, coméntalo con tu médico; no lo suspendas por tu cuenta.</p>
+</section>
+
+<!-- CONFIGURACION -->
+<section class="view" id="v-config">
+  <h2>Configuración</h2>
+  <div class="card">
+    <h3>Apariencia</h3>
+    <div class="opt"><div class="txt"><b>Tema</b><span>Claro, oscuro o igual que tu iPhone</span></div>
+      <select id="cTheme"><option value="auto">Automático</option><option value="light">Claro</option><option value="dark">Oscuro</option></select></div>
+    <div class="opt"><div class="txt"><b>Letra más grande</b><span>Agranda textos y botones</span></div>
+      <label class="switch"><input type="checkbox" id="cBig"><i></i></label></div>
+    <div class="opt" style="display:block"><div class="txt"><b>Separación superior</b><span>Baja el título si se ve borroso bajo la hora y la batería (solo en la app de inicio): <b id="cGapV" style="display:inline">30</b></span></div>
+      <input type="range" id="cGap" min="0" max="70" step="5" style="width:100%;margin-top:8px"></div>
+  </div>
+  <div class="card">
+    <h3>Mensajes de motivación</h3>
+    <div class="opt"><div class="txt"><b>Mostrar mensajes</b><span>Franja en movimiento en Inicio</span></div>
+      <label class="switch"><input type="checkbox" id="cMq"><i></i></label></div>
+    <div class="opt"><div class="txt"><b>Velocidad</b><span>Qué tan rápido pasan</span></div>
+      <select id="cMqSpeed"><option value="lenta">Lenta</option><option value="normal">Normal</option><option value="rapida">Rápida</option></select></div>
+    <div class="opt"><div class="txt"><b>Sin animaciones</b><span>Quita todos los movimientos de la app</span></div>
+      <label class="switch"><input type="checkbox" id="cNoMotion"><i></i></label></div>
+  </div>
+  <div class="card">
+    <h3>Inicio</h3>
+    <div class="opt"><div class="txt"><b>Recomendaciones visibles</b><span>Cuántas se ven antes de "Ver más"</span></div>
+      <select id="cRecs"><option value="2">2</option><option value="3">3</option><option value="5">5</option><option value="99">Todas</option></select></div>
+    <div class="opt"><div class="txt"><b>Plan de comida abierto</b><span>Mostrarlo desplegado siempre</span></div>
+      <label class="switch"><input type="checkbox" id="cFood"><i></i></label></div>
+    <div class="opt"><div class="txt"><b>Metas de glucosa</b><span>Ayunas, después de comer y antes de dormir</span></div>
+      <a href="#perfil" class="ghost sm" style="text-decoration:none;color:var(--teal);font-weight:700;padding:8px 12px;border:1px solid var(--line);border-radius:12px">Editar</a></div>
+  </div>
+  <div class="card">
+    <h3>Datos</h3>
+    <div class="opt"><div class="txt"><b>Respaldo</b><span id="cLastBk">Descarga una copia o súbela en otro celular</span></div>
+      <div class="row" style="gap:6px;flex-wrap:nowrap"><button class="ghost sm" data-export="1">Descargar</button><label class="btnlike" for="bImport" style="min-height:36px;padding:6px 12px;font-size:14px">Subir</label></div></div>
+    <div class="opt"><div class="txt"><b>Espacio usado</b><span id="cSpace">—</span></div></div>
+    <div class="opt"><div class="txt"><b>Borrar todos los datos</b><span>Elimina lecturas, pastillas, pesos y perfil de este celular</span></div>
+      <button class="ghost sm" id="cWipe" style="color:var(--alert)">Borrar</button></div>
+  </div>
+  <p class="note" style="text-align:center">Mi Glucosa · versión <span id="cVer"></span></p>
 </section>
 
 <!-- PERFIL -->
@@ -744,13 +801,15 @@ function motivation(){
   return msgs;
 }
 let mqKey = '';
-function renderMarquee(){
-  const msgs = motivation(), key = msgs.join('|');
+function renderMarquee(force){
+  const msgs = motivation(), key = msgs.join('|') + '|' + ui().mqSpeed;
+  if (force) mqKey = '';
   if (key === mqKey) return;   // no reiniciar la animación si no cambió nada
   mqKey = key;
   const html = msgs.map(m => '<span>' + esc(m) + '</span>').join('');
   $('#mqTrack').innerHTML = html + html.replace(/<span>/g, '<span aria-hidden="true">');   // dos copias para un giro sin cortes
-  $('#mqTrack').style.setProperty('--mqdur', Math.max(60, msgs.length * 9) + 's');
+  const per = {lenta:13, normal:9, rapida:5}[ui().mqSpeed] || 9;
+  $('#mqTrack').style.setProperty('--mqdur', Math.max(30, msgs.length * per) + 's');
 }
 
 /* Posición en la barra: cada tramo (40–70, 70–180, 180–250, 250–400) ocupa 25 % */
@@ -784,11 +843,11 @@ function renderHome(){
   }
   const order = {urgent:0, warn:1, good:2, info:3};
   const recs = recommendations().map((r,i)=>({...r,i})).sort((a,b)=>order[a.lvl]-order[b.lvl] || a.i-b.i);
-  const shown = recOpen ? recs : recs.slice(0, 3);
+  const lim = +ui().recs || 3, shown = recOpen ? recs : recs.slice(0, lim);
   $('#recs').innerHTML = shown.map(r => '<div class="card rec '+r.lvl+'"><h3>'+esc(r.t)+'</h3><p>'+esc(r.b)+'</p></div>').join('');
   const more = $('#recMore');
-  more.style.display = recs.length > 3 ? '' : 'none';
-  more.textContent = recOpen ? 'Ver menos' : 'Ver '+(recs.length-3)+' recomendaciones más';
+  more.style.display = recs.length > lim ? '' : 'none';
+  more.textContent = recOpen ? 'Ver menos' : 'Ver '+(recs.length-lim)+(recs.length-lim===1?' recomendación más':' recomendaciones más');
   const fp = foodPlan();
   $('#prefer').innerHTML = fp.prefer.map(x=>'<li>'+esc(x)+'</li>').join('');
   $('#avoid').innerHTML = fp.avoid.map(x=>'<li>'+esc(x)+'</li>').join('');
@@ -1068,15 +1127,45 @@ function renderCharts(){
   const dd = [...new Set(rs.map(r=>dKey(r.t)))].map(k=>avg(S.days[k].entries.filter(r=>r.t >= Date.now()-days*DAY)));
   $('#iDaily').textContent = dd.length ? dd.filter(x=>x<=180).length+' de '+dd.length+' días con promedio en meta (180 o menos).' : '';
 }
-function renderAll(){ renderHome(); renderList(); renderMeds(); renderProfile(); if (location.hash==='#graficas') renderCharts(); }
+/* ---------- Configuración de la app ---------- */
+const UI_DEF = {theme:'auto', big:false, gap:30, mq:true, mqSpeed:'normal', noMotion:false, recs:3, food:false};
+const ui = () => ({...UI_DEF, ...(S.settings.ui || {})});
+const APP_VER = '15';
+function applyUI(){
+  const u = ui(), root = document.documentElement;
+  if (u.theme === 'auto') delete root.dataset.theme; else root.dataset.theme = u.theme;
+  root.classList.toggle('bigtext', !!u.big);
+  root.classList.toggle('nomotion', !!u.noMotion);
+  root.style.setProperty('--topgap', u.gap + 'px');
+  $('#marquee').style.display = u.mq ? '' : 'none';
+  const fold = document.querySelector('details.fold'); if (fold && u.food && !fold.dataset.touched) fold.open = true;
+  const meta = document.querySelector('meta[name=theme-color]'); if (meta) meta.content = '#0E1A4F';
+}
+function renderConfig(){
+  const u = ui();
+  $('#cTheme').value = u.theme; $('#cBig').checked = !!u.big; $('#cGap').value = u.gap; $('#cGapV').textContent = u.gap;
+  $('#cMq').checked = !!u.mq; $('#cMqSpeed').value = u.mqSpeed; $('#cNoMotion').checked = !!u.noMotion;
+  $('#cRecs').value = String(u.recs); $('#cFood').checked = !!u.food;
+  let bytes = 0; try{ for (let i=0;i<localStorage.length;i++){ const k = localStorage.key(i); if (k.startsWith('glu:')) bytes += (localStorage.getItem(k)||'').length*2; } }catch(e){}
+  $('#cSpace').textContent = (bytes/1024).toFixed(0)+' KB de unos 5,000 KB disponibles ('+Math.max(0.1, bytes/1024/5000*100).toFixed(1)+' %)';
+  $('#cVer').textContent = APP_VER;
+}
+async function setUI(patch){
+  S.settings = {...S.settings, ui: {...ui(), ...patch}};
+  applyUI(); renderMarquee(true); renderHome();
+  await save('settings', S.settings);
+}
+function renderAll(){ applyUI(); renderHome(); renderList(); renderMeds(); renderProfile(); if (location.hash==='#config') renderConfig(); if (location.hash==='#graficas') renderCharts(); }
 
 /* ---------- Navegación ---------- */
 function route(){
-  const v = (location.hash||'#inicio').slice(1), ok = ['inicio','registros','graficas','meds','perfil'].includes(v) ? v : 'inicio';
+  const v = (location.hash||'#inicio').slice(1), ok = ['inicio','registros','graficas','meds','perfil','config'].includes(v) ? v : 'inicio';
   document.querySelectorAll('.view').forEach(s => s.classList.toggle('on', s.id==='v-'+ok));
   document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.dataset.v===ok));
   if (ok==='graficas') renderCharts();
   if (ok==='perfil') renderProfile();
+  if (ok==='config') renderConfig();
+  document.querySelector('.gear').classList.toggle('on', ok==='config');
   window.scrollTo(0,0);
 }
 window.addEventListener('hashchange', route);
@@ -1084,6 +1173,25 @@ window.addEventListener('hashchange', route);
 /* ---------- Eventos ---------- */
 const nowLocal = () => { const d = new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,16); };
 $('#rTime').value = nowLocal();
+$('#cTheme').addEventListener('change', e => setUI({theme:e.target.value}));
+$('#cBig').addEventListener('change', e => setUI({big:e.target.checked}));
+$('#cGap').addEventListener('input', e => { $('#cGapV').textContent = e.target.value; document.documentElement.style.setProperty('--topgap', e.target.value + 'px'); });
+$('#cGap').addEventListener('change', e => setUI({gap:+e.target.value}));
+$('#cMq').addEventListener('change', e => setUI({mq:e.target.checked}));
+$('#cMqSpeed').addEventListener('change', e => setUI({mqSpeed:e.target.value}));
+$('#cNoMotion').addEventListener('change', e => setUI({noMotion:e.target.checked}));
+$('#cRecs').addEventListener('change', e => { recOpen = false; setUI({recs:+e.target.value}); });
+$('#cFood').addEventListener('change', e => { const f = document.querySelector('details.fold'); f.open = e.target.checked; setUI({food:e.target.checked}); });
+document.querySelector('details.fold').addEventListener('toggle', e => { e.target.dataset.touched = 1; });
+$('#cWipe').addEventListener('click', async e => {
+  const b = e.currentTarget;
+  if (!b.dataset.armed){ b.dataset.armed = 1; b.textContent = '¿Seguro? Toca otra vez'; b.classList.add('danger'); b.style.color = '#fff'; setTimeout(()=>{ if (b.isConnected){ delete b.dataset.armed; b.textContent = 'Borrar'; b.classList.remove('danger'); b.style.color = 'var(--alert)'; } }, 4000); return; }
+  try{ Object.keys(localStorage).filter(k => k.startsWith('glu:')).forEach(k => localStorage.removeItem(k)); }catch(x){}
+  if (!local && col){ for (const k of Object.keys(S.days)) await remove('d-'+k); for (const id of ['meds','weights','settings']) await remove(id); }
+  S.days = {}; S.meds = []; S.weights = []; S.settings = {type:'2', fastMax:130, postMax:180, bedMax:150, act:'sed'};
+  $('#hello').textContent = 'Guardado en este dispositivo';
+  renderAll(); toast('Se borraron todos los datos'); location.hash = '#inicio';
+});
 $('#rCtx').addEventListener('change', () => updateTarget('r'));
 $('#rVal').addEventListener('input', () => updateTarget('r'));
 $('#xCtx').addEventListener('change', () => updateTarget('x'));

@@ -1,6 +1,6 @@
 // Service worker de Mi Glucosa: permite abrir la app sin internet.
 // Cambia la versión cada vez que publiques cambios para forzar la actualización.
-const CACHE = 'mi-glucosa-v14';
+const CACHE = 'mi-glucosa-v15';
 const SHELL = [
   './',
   './index.html',
