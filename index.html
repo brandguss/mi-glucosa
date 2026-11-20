@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0E1A4F">
+<title>Mi Glucosa</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mi Glucosa">
+<!-- Configuración de Firebase (vacía = modo local en el dispositivo) -->
+<script src="firebase-config.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: calma clínica, motivadora, nunca regañona.
+   IDEA: un glucómetro de bolsillo: la última lectura grande, como la pantalla del medidor.
+   PICTURE: tarjeta azul marino con la cifra enorme y una escala de rangos debajo.
+   COLOUR and TYPE: paleta del usuario — marino #0E1A4F, petróleo #3A8290, turquesa #5EB3BE, hielo #EAF2F4; coral solo para alertas. Manrope.
+   LAYOUT: app móvil, barra inferior con 4 secciones, contenido en una columna de 720px. */
+:root{color-scheme:light dark;
+--navy:#0E1A4F;--teal:#3A8290;--aqua:#5EB3BE;--ice:#EAF2F4;--alert:#E0655A;--warn:#E6A23C;
+--bg:light-dark(#EAF2F4,#081236);--card:light-dark(#FFFFFF,#111E58);--ink:light-dark(#0E1A4F,#EAF2F4);
+--soft:light-dark(#4F6178,#A9C3CC);--line:light-dark(#D3E2E7,#24357A);--band:light-dark(#D4EBEE,#16306A)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Manrope,system-ui,sans-serif;overflow-x:clip;padding-bottom:84px}
+header{background:var(--navy);color:var(--ice);padding:18px max(5vw,16px) 14px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+header h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-.01em}
+header small{color:var(--aqua);font-size:14px}
+main{max-width:720px;margin:0 auto;padding:16px max(4vw,14px)}
+section.view{display:none}section.view.on{display:block}
+h2{font-size:22px;margin:22px 0 10px;line-height:1.15}
+h3{font-size:17px;margin:0 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}
+.hero{background:linear-gradient(160deg,var(--navy),#1A2C6E);color:var(--ice);border:0;padding:22px}
+.hero .lbl{color:var(--aqua);font-size:14px;font-weight:600}
+.big{font-size:clamp(56px,16vw,88px);font-weight:800;line-height:1;letter-spacing:-.03em}
+.big span{font-size:18px;font-weight:600;color:var(--aqua);margin-left:6px}
+.scale{position:relative;height:12px;border-radius:6px;margin:18px 0 6px;background:linear-gradient(90deg,var(--alert) 0 8%,var(--warn) 8% 12%,var(--aqua) 12% 40%,var(--teal) 40% 57%,var(--warn) 57% 72%,var(--alert) 72%)}
+.scale i{position:absolute;top:-6px;width:4px;height:24px;background:#fff;border-radius:2px;box-shadow:0 0 0 2px var(--navy);transition:left .5s}
+.ticks{display:flex;justify-content:space-between;font-size:13px;color:var(--aqua)}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:13px;font-weight:700;white-space:nowrap}
+.ok{background:var(--aqua);color:var(--navy)}.low,.crit{background:var(--alert);color:#fff}.high{background:var(--warn);color:var(--navy)}.vhigh{background:var(--alert);color:#fff}
+label{display:block;font-size:14px;font-weight:600;color:var(--soft);margin-bottom:4px}
+input,select,textarea{width:100%;font:16px Manrope,sans-serif;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-height:46px}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:3px solid var(--aqua);outline-offset:1px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.field{margin-bottom:10px}
+button{font:700 16px Manrope,sans-serif;min-height:46px;padding:10px 16px;border-radius:12px;border:0;cursor:pointer;background:var(--teal);color:#fff}
+button.ghost{background:transparent;color:var(--teal);border:1px solid var(--line)}
+button.sm{min-height:36px;padding:6px 12px;font-size:14px}
+button.danger{background:var(--alert)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.rec{border-left:5px solid var(--aqua)}.rec.urgent{border-left-color:var(--alert)}.rec.warn{border-left-color:var(--warn)}.rec.good{border-left-color:var(--teal)}
+.rec p{margin:4px 0 0;color:var(--soft)}
+.lists{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.lists ul{margin:6px 0 0;padding-left:18px}.lists li{margin:3px 0}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.kpi b{display:block;font-size:28px;line-height:1.1}.kpi small{color:var(--soft);font-size:13px}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.seg button{background:var(--card);color:var(--ink);border:1px solid var(--line);min-height:40px;font-size:14px}
+.seg button.on{background:var(--navy);color:var(--ice);border-color:var(--navy)}
+.fig{position:relative;min-height:260px}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+.fig.short{min-height:200px}
+.insight{font-size:15px;color:var(--soft);margin:8px 0 0}
+.stackbar{display:flex;height:30px;border-radius:10px;overflow:hidden;margin:8px 0}
+.stackbar div{height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--soft)}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;background:var(--c)}
+.hrow{display:grid;grid-template-columns:7.5em minmax(0,1fr) 4.5em;gap:8px;align-items:center;margin:8px 0;font-size:14px}
+.hrow .tr{background:var(--band);border-radius:8px;height:22px;overflow:hidden}.hrow .tr div{height:100%;border-radius:8px}
+.hrow b{text-align:right;white-space:nowrap}
+.entry{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);align-items:center}
+.entry:last-child{border-bottom:0}
+.entry .v{font-size:22px;font-weight:800;white-space:nowrap}.entry .m{font-size:13px;color:var(--soft)}
+.dayh{font-weight:700;margin:14px 0 2px;color:var(--teal)}
+.banner{background:var(--warn);color:var(--navy);padding:10px 14px;border-radius:12px;font-size:14px;margin-bottom:12px;display:none}
+.note{font-size:13px;color:var(--soft)}
+.med{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.med:last-child{border-bottom:0}
+.chk{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--ink);margin:0}
+.chk input{width:24px;height:24px;min-height:0}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--navy);display:grid;grid-template-columns:repeat(4,1fr);padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:5}
+nav a{color:#A9C3CC;text-decoration:none;font-size:12px;font-weight:600;text-align:center;padding:6px 2px;border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:48px;justify-content:center}
+nav a svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2}
+nav a.on{color:var(--navy);background:var(--aqua)}
+#login{position:fixed;inset:0;background:var(--navy);color:var(--ice);z-index:20;display:none;overflow:auto;padding:max(40px,env(safe-area-inset-top)) max(6vw,18px) 40px}
+#login .box{max-width:420px;margin:0 auto}
+#login h1{font-size:34px;margin:16px 0 6px;line-height:1.05}
+#login p{color:var(--aqua);margin:0 0 22px}
+#login label{color:var(--aqua)}
+#login input{background:#16246A;border-color:#2B3F8C;color:var(--ice)}
+#login button{width:100%;margin-top:10px}
+#login .alt{background:var(--ice);color:var(--navy)}
+#login .link{background:none;color:var(--aqua);min-height:40px;font-weight:600;font-size:15px}
+#loginErr{color:#FFB4AC;min-height:22px;font-size:14px;margin-top:8px}
+header{padding-top:max(18px,env(safe-area-inset-top))}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--teal);color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;display:none;z-index:9;max-width:90vw}
+@media(max-width:480px){.lists{grid-template-columns:1fr}.hrow{grid-template-columns:6.5em minmax(0,1fr) 4em}}
+@media(prefers-reduced-motion:reduce){.scale i{transition:none}}
+</style>
+</head>
+<body>
+<!-- Pantalla de inicio de sesión (solo si Firebase está configurado) -->
+<div id="login">
+  <div class="box">
+    <svg width="56" height="56" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 3C11 12 7 17 7 22a10 10 0 0 0 20 0c0-5-4-10-10-19z" fill="#5EB3BE"/><path d="M12 22a5 5 0 0 0 5 5" stroke="#0E1A4F" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+    <h1>Mi Glucosa</h1>
+    <p>Registra, entiende y baja tu glucosa, un día a la vez.</p>
+    <form id="fLogin">
+      <div class="field"><label for="lEmail">Correo</label><input id="lEmail" type="email" autocomplete="email" required></div>
+      <div class="field"><label for="lPass">Contraseña (mínimo 6 caracteres)</label><input id="lPass" type="password" autocomplete="current-password" minlength="6" required></div>
+      <button type="submit">Entrar</button>
+      <button type="button" class="alt" id="lCreate">Crear cuenta</button>
+      <button type="button" class="alt" id="lGoogle">Continuar con Google</button>
+      <button type="button" class="link" id="lReset">Olvidé mi contraseña</button>
+    </form>
+    <div id="loginErr" role="alert"></div>
+  </div>
+</div>
+
+<header><div><h1>Mi Glucosa</h1><small id="hello">Conectando…</small></div><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 3C11 12 7 17 7 22a10 10 0 0 0 20 0c0-5-4-10-10-19z" fill="#5EB3BE"/><path d="M12 22a5 5 0 0 0 5 5" stroke="#0E1A4F" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg></header>
+<main>
+<div class="banner" id="banner"></div>
+
+<!-- INICIO -->
+<section class="view" id="v-inicio">
+  <div class="card hero">
+    <div class="lbl" id="lastWhen">Sin lecturas todavía</div>
+    <div class="big" id="lastVal">—<span>mg/dL</span></div>
+    <div style="margin-top:8px" id="lastPill"></div>
+    <div class="scale"><i id="marker" style="left:0"></i></div>
+    <div class="ticks"><span>40</span><span>70</span><span>180</span><span>250</span><span>400</span></div>
+  </div>
+
+  <div class="card">
+    <h3>Registrar lectura</h3>
+    <form id="fRead">
+      <div class="grid2">
+        <div class="field"><label for="rVal">Glucosa (mg/dL)</label><input id="rVal" type="number" inputmode="numeric" min="20" max="600" required placeholder="Ej. 145"></div>
+        <div class="field"><label for="rCtx">Momento</label>
+          <select id="rCtx"><option value="ayunas">En ayunas</option><option value="antes">Antes de comer</option><option value="despues">2 h después de comer</option><option value="dormir">Antes de dormir</option><option value="sensor">Sensor (Dexcom/Libre)</option><option value="otro">Otro</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label for="rTime">Fecha y hora</label><input id="rTime" type="datetime-local" required></div>
+        <div class="field"><label for="rNote">Nota (opcional)</label><input id="rNote" maxlength="120" placeholder="Ej. comí tamales"></div>
+      </div>
+      <button type="submit" style="width:100%">Guardar lectura</button>
+    </form>
+  </div>
+
+  <h2>Recomendaciones de hoy</h2>
+  <div id="recs"></div>
+  <div class="card">
+    <h3>Plan de comida para hoy</h3>
+    <div class="lists"><div><b style="color:var(--teal)">Prefiere</b><ul id="prefer"></ul></div><div><b style="color:var(--alert)">Hoy evita</b><ul id="avoid"></ul></div></div>
+  </div>
+  <div class="card" id="todayMeds"></div>
+  <p class="note">Esta app da orientación general basada en tus lecturas y en guías de diabetes; no reemplaza a tu médico. Nunca suspendas ni cambies un medicamento sin indicación médica.</p>
+</section>
+
+<!-- REGISTROS -->
+<section class="view" id="v-registros">
+  <h2>Mis registros</h2>
+  <div class="card">
+    <h3>Importar del sensor</h3>
+    <p class="note" style="margin-top:0">Sube el CSV que exportas desde Dexcom Clarity o LibreView. Las lecturas repetidas no se duplican.</p>
+    <input type="file" id="csv" accept=".csv,.txt,text/csv">
+    <p class="note" id="csvMsg"></p>
+  </div>
+  <div class="card">
+    <h3>Respaldo</h3>
+    <p class="note" style="margin-top:0">Descarga una copia de todos tus datos o restaura una copia anterior.</p>
+    <div class="row"><button class="ghost sm" id="bExport">Descargar respaldo</button><label class="ghost sm" for="bImport" style="margin:0;display:inline-flex;align-items:center;min-height:36px;padding:6px 12px;border:1px solid var(--line);border-radius:12px;color:var(--teal);font-weight:700;font-size:14px;cursor:pointer">Restaurar respaldo</label><input type="file" id="bImport" accept=".json,application/json" style="display:none"></div>
+  </div>
+  <div class="row" style="margin-bottom:10px"><button class="ghost sm" id="copyRep">Copiar reporte para mi médico (14 días)</button></div>
+  <div class="card" id="list"></div>
+</section>
+
+<!-- GRAFICAS -->
+<section class="view" id="v-graficas">
+  <h2>Mis gráficas</h2>
+  <div class="seg" id="range"><button data-d="7" class="on">7 días</button><button data-d="14">14 días</button><button data-d="30">30 días</button><button data-d="90">90 días</button></div>
+  <div class="kpis">
+    <div class="kpi"><small>Promedio</small><b id="kAvg">—</b><small>mg/dL</small></div>
+    <div class="kpi"><small>Tiempo en rango (70–180)</small><b id="kTir">—</b><small>meta: más de 70 %</small></div>
+    <div class="kpi"><small>A1c estimada (GMI)</small><b id="kGmi">—</b><small id="kGmiN">requiere ~14 días</small></div>
+    <div class="kpi"><small>Lecturas</small><b id="kN">—</b><small id="kNs">en el periodo</small></div>
+  </div>
+  <div class="card"><h3>Tendencia de glucosa</h3><div class="fig"><svg id="gTrend"></svg></div><p class="insight" id="iTrend"></p></div>
+  <div class="card"><h3>Tiempo en cada rango</h3><div class="stackbar" id="tirBar"></div><div class="legend" id="tirLeg"></div><p class="insight" id="iTir"></p></div>
+  <div class="card"><h3>Promedio por hora del día</h3><div id="byTime"></div><p class="insight" id="iTime"></p></div>
+  <div class="card"><h3>Promedio diario</h3><div class="fig short"><svg id="gDaily"></svg></div><p class="insight" id="iDaily"></p></div>
+</section>
+
+<!-- MEDICAMENTOS -->
+<section class="view" id="v-meds">
+  <h2>Medicamentos</h2>
+  <div class="card" id="medList"></div>
+  <div class="card">
+    <h3 id="medFormT">Agregar medicamento</h3>
+    <form id="fMed">
+      <input type="hidden" id="mId">
+      <div class="grid2">
+        <div class="field"><label for="mName">Nombre</label><input id="mName" required maxlength="60" placeholder="Ej. Metformina"></div>
+        <div class="field"><label for="mDose">Dosis</label><input id="mDose" maxlength="40" placeholder="Ej. 850 mg"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label for="mTimes">Horario</label><input id="mTimes" maxlength="40" placeholder="Ej. 8:00 y 20:00"></div>
+        <div class="field"><label for="mKind">Tipo</label><select id="mKind"><option value="oral">Oral (pastilla)</option><option value="insulina">Insulina</option><option value="inyectable">Otro inyectable</option><option value="otro">Otro</option></select></div>
+      </div>
+      <div class="field"><label for="mNotes">Notas</label><input id="mNotes" maxlength="120" placeholder="Ej. con el desayuno"></div>
+      <div class="row"><button type="submit">Guardar</button><button type="button" class="ghost" id="mCancel" style="display:none">Cancelar</button></div>
+    </form>
+  </div>
+  <div class="card">
+    <h3>Mi perfil</h3>
+    <div class="field"><label for="sType">Tipo de diabetes</label><select id="sType"><option value="2">Tipo 2</option><option value="1">Tipo 1</option><option value="pre">Prediabetes</option><option value="otro">Otro / no sé</option></select></div>
+    <p class="note">Ajusta algunas recomendaciones (por ejemplo, revisar cetonas con glucosa muy alta).</p>
+  </div>
+  <div class="card">
+    <h3>Cuenta</h3>
+    <p class="note" style="margin-top:0" id="accInfo">Modo local: tus datos se guardan solo en este dispositivo.</p>
+    <button class="ghost sm" id="logout" style="display:none">Cerrar sesión</button>
+  </div>
+  <p class="note">Si notas que un medicamento nuevo (por ejemplo, un corticoide como la prednisona) te sube la glucosa, coméntalo con tu médico; no lo suspendas por tu cuenta.</p>
+</section>
+</main>
+
+<nav>
+  <a href="#inicio" data-v="inicio"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Inicio</a>
+  <a href="#registros" data-v="registros"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg>Registros</a>
+  <a href="#graficas" data-v="graficas"><svg viewBox="0 0 24 24"><path d="M3 20h18M6 16l4-6 4 3 5-8"/></svg>Gráficas</a>
+  <a href="#meds" data-v="meds"><svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="7" rx="3.5" transform="rotate(-35 12 12.5)"/><path d="M10 7l5 8"/></svg>Medicinas</a>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+{
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const CTX = {ayunas:'En ayunas',antes:'Antes de comer',despues:'Después de comer',dormir:'Antes de dormir',sensor:'Sensor',otro:'Otro'};
+const pad = n => String(n).padStart(2,'0');
+const dKey = t => { const d = new Date(t); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); };
+const fmtT = t => { const d = new Date(t); return pad(d.getHours())+':'+pad(d.getMinutes()); };
+const fmtD = k => { const [y,m,d] = k.split('-').map(Number); return new Date(y,m-1,d).toLocaleDateString('es-MX',{weekday:'short',day:'numeric',month:'short'}); };
+const DAY = 864e5;
+
+/* ---------- Estado ---------- */
+const S = { days:{}, meds:[], settings:{type:'2'}, range:7 };
+
+/* Clasifica una lectura según el momento en que se tomó */
+function status(v, c){
+  if (v < 54) return ['crit','Muy baja'];
+  if (v < 70) return ['low','Baja'];
+  const lim = (c === 'ayunas' || c === 'antes') ? 130 : 180;
+  if (v <= lim) return ['ok','En meta'];
+  if (v <= 250) return ['high','Alta'];
+  return ['vhigh', v >= 300 ? 'Muy alta' : 'Alta'];
+}
+const allReadings = () => Object.entries(S.days).flatMap(([k,d]) => (d.entries||[]).map(e => ({...e,k}))).sort((a,b)=>a.t-b.t);
+const inRange = (rs, days) => { const from = Date.now() - days*DAY; return rs.filter(r => r.t >= from); };
+const avg = a => a.length ? a.reduce((s,r)=>s+r.v,0)/a.length : null;
+
+/* ---------- Persistencia: Firebase (si está configurado) o modo local ---------- */
+const FB = window.FIREBASE_CONFIG || {};
+const fbOn = !!FB.apiKey;
+let col = null, local = true, unsub = null;
+const writes = {};
+const LS = 'glu:';
+
+// Cadena de escrituras por documento: una a la vez, en orden
+function save(id, body){
+  if (local){ try{ localStorage.setItem(LS+id, JSON.stringify(body)); }catch(e){ toast('No hay espacio en el dispositivo'); } return Promise.resolve(); }
+  const ref = col.doc(id);
+  writes[id] = (writes[id]||Promise.resolve()).then(()=>ref.set(JSON.parse(JSON.stringify(body)))).catch(()=>toast('No se pudo guardar, se reintentará al reconectar'));
+  return writes[id];
+}
+function remove(id){
+  if (local){ try{ localStorage.removeItem(LS+id); }catch(e){} return Promise.resolve(); }
+  const ref = col.doc(id);
+  writes[id] = (writes[id]||Promise.resolve()).then(()=>ref.delete()).catch(()=>toast('No se pudo borrar'));
+  return writes[id];
+}
+function ingest(id, data){
+  if (id.startsWith('d-')) S.days[id.slice(2)] = { entries:[...(data.entries||[])], taken:{...(data.taken||{})} };
+  else if (id === 'meds') S.meds = [...(data.list||[])];
+  else if (id === 'settings') S.settings = {...S.settings, ...data};
+}
+function localDocs(){
+  const out = {};
+  try{ for (let i=0;i<localStorage.length;i++){ const k = localStorage.key(i); if (k && k.startsWith(LS)) out[k.slice(LS.length)] = JSON.parse(localStorage.getItem(k)); } }catch(e){}
+  return out;
+}
+function loadLocal(){
+  local = true;
+  S.days = {}; S.meds = [];
+  const docs = localDocs();
+  for (const id in docs) ingest(id, docs[id]);
+  $('#hello').textContent = 'Guardado en este dispositivo';
+  $('#accInfo').textContent = 'Modo local: tus datos se guardan solo en este dispositivo. Descarga un respaldo de vez en cuando (sección Registros).';
+  try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
+  renderAll();
+}
+const showBanner = m => { const b = $('#banner'); b.textContent = m; b.style.display = m ? 'block' : 'none'; };
+let toastT;
+function toast(m){ const t = $('#toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(()=>t.style.display='none', 2600); }
+
+// Carga un script externo y espera a que termine
+const loadScript = src => new Promise((ok, bad) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = bad; document.head.appendChild(s); });
+const FBV = '10.12.2';
+const authMsg = c => ({
+  'auth/invalid-email':'El correo no es válido.',
+  'auth/invalid-credential':'Correo o contraseña incorrectos.',
+  'auth/wrong-password':'Correo o contraseña incorrectos.',
+  'auth/user-not-found':'No existe una cuenta con ese correo.',
+  'auth/email-already-in-use':'Ya existe una cuenta con ese correo. Usa "Entrar".',
+  'auth/weak-password':'La contraseña debe tener al menos 6 caracteres.',
+  'auth/too-many-requests':'Demasiados intentos. Espera unos minutos.',
+  'auth/network-request-failed':'Sin conexión a internet.',
+  'auth/popup-closed-by-user':'Se cerró la ventana de Google antes de terminar.'
+}[c] || 'No se pudo iniciar sesión ('+c+').');
+
+async function init(){
+  renderAll();
+  if (!fbOn){ loadLocal(); return; }
+  try{
+    await loadScript('https://www.gstatic.com/firebasejs/'+FBV+'/firebase-app-compat.js');
+    await Promise.all([loadScript('https://www.gstatic.com/firebasejs/'+FBV+'/firebase-auth-compat.js'), loadScript('https://www.gstatic.com/firebasejs/'+FBV+'/firebase-firestore-compat.js')]);
+  }catch(e){ showBanner('Sin internet: usando los datos guardados en este dispositivo.'); loadLocal(); return; }
+  firebase.initializeApp(FB);
+  const fs = firebase.firestore();
+  try{ await fs.enablePersistence({synchronizeTabs:true}); }catch(e){} // caché sin conexión
+  const auth = firebase.auth();
+  const err = m => $('#loginErr').textContent = m;
+  const creds = () => [$('#lEmail').value.trim(), $('#lPass').value];
+  $('#fLogin').addEventListener('submit', async e => { e.preventDefault(); err(''); try{ await auth.signInWithEmailAndPassword(...creds()); }catch(x){ err(authMsg(x.code)); } });
+  $('#lCreate').addEventListener('click', async () => { err(''); if (!$('#fLogin').reportValidity()) return; try{ await auth.createUserWithEmailAndPassword(...creds()); }catch(x){ err(authMsg(x.code)); } });
+  $('#lGoogle').addEventListener('click', async () => { err(''); const p = new firebase.auth.GoogleAuthProvider(); try{ await auth.signInWithPopup(p); }catch(x){ if (x.code==='auth/popup-blocked' || x.code==='auth/operation-not-supported-in-this-environment') await auth.signInWithRedirect(p); else err(authMsg(x.code)); } });
+  $('#lReset').addEventListener('click', async () => { const em = $('#lEmail').value.trim(); if (!em) return err('Escribe tu correo arriba y vuelve a tocar "Olvidé mi contraseña".'); try{ await auth.sendPasswordResetEmail(em); err('Te enviamos un correo para cambiar tu contraseña.'); }catch(x){ err(authMsg(x.code)); } });
+  $('#logout').addEventListener('click', () => auth.signOut());
+  auth.getRedirectResult().catch(x => err(authMsg(x.code)));
+
+  auth.onAuthStateChanged(u => {
+    if (unsub){ unsub(); unsub = null; }
+    if (!u){ local = true; col = null; S.days = {}; S.meds = []; renderAll(); $('#login').style.display = 'block'; $('#logout').style.display = 'none'; return; }
+    $('#login').style.display = 'none'; $('#loginErr').textContent = '';
+    local = false;
+    const name = (u.displayName || u.email || '').split(/[ @]/)[0];
+    $('#hello').textContent = name ? 'Hola, ' + name : 'Sesión iniciada';
+    $('#accInfo').textContent = 'Sesión iniciada como ' + (u.email || 'usuario') + '. Tus datos se sincronizan entre tus dispositivos.';
+    $('#logout').style.display = '';
+    col = fs.collection('users').doc(u.uid).collection('docs');
+    const timer = setTimeout(()=>showBanner('No se pudo conectar todavía; mostrando lo último guardado.'), 10000);
+    let first = true;
+    unsub = col.onSnapshot({includeMetadataChanges:false}, async snap => {
+      if (!snap.metadata.fromCache){ clearTimeout(timer); showBanner(''); }
+      // Primera vez en la nube: sube lo que había en modo local
+      if (first && !snap.metadata.fromCache){
+        first = false;
+        const ld = localDocs();
+        if (snap.empty && Object.keys(ld).length){ for (const id in ld) await save(id, ld[id]); toast('Se subieron tus datos de este dispositivo'); return; }
+      }
+      S.days = {}; S.meds = [];
+      snap.forEach(d => ingest(d.id, d.data() || {}));
+      renderAll();
+    }, () => { clearTimeout(timer); showBanner('No se pudo leer tu información. Revisa las reglas de Firestore o tu conexión.'); });
+  });
+}
+
+/* ---------- Respaldo: exportar e importar ---------- */
+function snapshotDocs(){
+  const docs = {};
+  for (const k in S.days) docs['d-'+k] = S.days[k];
+  docs.meds = {list:S.meds}; docs.settings = S.settings;
+  return docs;
+}
+$('#bExport').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify({app:'mi-glucosa', version:1, exported:new Date().toISOString(), docs:snapshotDocs()}, null, 1)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'mi-glucosa-respaldo-'+dKey(Date.now())+'.json';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+  toast('Respaldo descargado');
+});
+$('#bImport').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try{
+    const j = JSON.parse(await f.text());
+    if (j.app !== 'mi-glucosa' || !j.docs) throw 0;
+    const all = [];
+    for (const id in j.docs) if (id.startsWith('d-')) for (const r of (j.docs[id].entries||[])) all.push(r);
+    if (j.docs.meds && Array.isArray(j.docs.meds.list)){ for (const m of j.docs.meds.list) if (!S.meds.some(x=>x.id===m.id)) S.meds.push(m); await save('meds',{list:S.meds}); }
+    const n = await addReadings(all);
+    toast(n ? 'Respaldo restaurado' : 'Esos datos ya estaban registrados');
+  }catch(x){ toast('El archivo no es un respaldo válido'); }
+  e.target.value = '';
+});
+
+/* ---------- Altas y bajas de lecturas ---------- */
+async function addReadings(list){
+  const touched = {};
+  for (const r of list){
+    const k = dKey(r.t);
+    const day = S.days[k] || (S.days[k] = {entries:[], taken:{}});
+    if (day.entries.some(e => Math.abs(e.t - r.t) < 60000)) continue; // evita duplicados del mismo minuto
+    day.entries.push(r); touched[k] = 1;
+  }
+  const keys = Object.keys(touched);
+  renderAll();
+  for (const k of keys){ S.days[k].entries.sort((a,b)=>a.t-b.t); await save('d-'+k, S.days[k]); }
+  return keys.length ? list.length : 0;
+}
+async function delReading(k, t){
+  const day = S.days[k]; if (!day) return;
+  day.entries = day.entries.filter(e => e.t !== t);
+  renderAll();
+  if (!day.entries.length && !Object.keys(day.taken||{}).length){ delete S.days[k]; await remove('d-'+k); }
+  else await save('d-'+k, day);
+}
+
+/* ---------- Motor de recomendaciones (reglas) ---------- */
+function recommendations(){
+  const rs = allReadings(), last = rs[rs.length-1], out = [];
+  const today = inRange(rs, 1), last3 = inRange(rs, 3);
+  const prev3 = rs.filter(r => r.t < Date.now()-3*DAY && r.t >= Date.now()-6*DAY);
+  const a3 = avg(last3), ap = avg(prev3);
+  const t1 = S.settings.type === '1';
+  if (!last) return [{lvl:'info',t:'Empieza registrando tu primera lectura',b:'Con 3 o 4 lecturas al día (ayunas, antes y 2 h después de comer) las recomendaciones se vuelven mucho más precisas.'}];
+  const fresh = Date.now() - last.t < 6*3600e3;
+  if (fresh && last.v < 54) out.push({lvl:'urgent',t:'Glucosa muy baja: actúa ahora',b:'Toma 15 g de azúcar rápida (½ vaso de jugo o refresco normal, o 3–4 tabletas de glucosa) y vuelve a medir en 15 minutos. Si no mejoras, estás confundido o no puedes tragar, llama al 911.'});
+  else if (fresh && last.v < 70) out.push({lvl:'urgent',t:'Glucosa baja',b:'Regla 15-15: toma 15 g de carbohidrato rápido, espera 15 minutos y vuelve a medir. Repite si sigue debajo de 70 y después come algo con proteína.'});
+  else if (fresh && last.v >= 300) out.push({lvl:'urgent',t:'Glucosa por encima de 300',b:'Toma agua natural, no hagas ejercicio intenso y vuelve a medir en 2 horas. Si tienes vómito, dolor de estómago, mucha sed, respiración agitada o confusión, acude a urgencias. Avísale hoy a tu médico.'+(t1?' Revisa cetonas si tienes tiras.':'')});
+  else if (fresh && last.v > 250) out.push({lvl:'warn',t:'Glucosa alta (más de 250)',b:'Hidrátate con agua, evita carbohidratos en tu próxima comida y vuelve a medir en 2–3 horas.'+(t1?' Con tipo 1, revisa cetonas antes de hacer ejercicio.':'')});
+  else if (fresh && last.v > 180) out.push({lvl:'warn',t:'Tu azúcar sigue elevada, pero puedes bajarla hoy',b:'Si te sientes bien, una caminata de 10–15 minutos ayuda a que tus músculos usen la glucosa. Toma un vaso de agua y haz tu próxima comida con mitad del plato de verduras.'});
+  else if (fresh) out.push({lvl:'good',t:'¡Esa lectura está en meta!',b:'Lo que comiste e hiciste antes de esta medición te funcionó. Anótalo para repetirlo.'});
+
+  if (a3 && a3 > 200 && last3.length >= 3) out.push({lvl:'warn',t:'Tu promedio de 3 días es de '+Math.round(a3)+' mg/dL',b:'Cuando el promedio se mantiene arriba de 200, normalmente el tratamiento necesita ajustarse: no es falta de voluntad. Agenda cita con tu médico esta semana y lleva el reporte de la sección Registros.'});
+  if (a3 && ap && ap - a3 >= 10) out.push({lvl:'good',t:'Vas bajando '+Math.round(ap-a3)+' mg/dL',b:'Tu promedio de los últimos 3 días es menor que el de los 3 anteriores. Sigue así, el progreso cuenta aunque todavía no llegues a la meta.'});
+  const highFasting = today.filter(r => r.c==='ayunas' && r.v>130);
+  if (highFasting.length) out.push({lvl:'info',t:'Ayuno alto',b:'Una cena más ligera y temprana (2–3 horas antes de dormir) y evitar postres en la noche suelen mejorar la glucosa de la mañana.'});
+  const highPost = today.filter(r => r.c==='despues' && r.v>180);
+  if (highPost.length) out.push({lvl:'info',t:'Subidas después de comer',b:'Come primero las verduras y la proteína, deja tortilla, arroz o pan al final y reduce la porción a la mitad.'});
+
+  const day = S.days[dKey(Date.now())], taken = (day && day.taken) || {};
+  const pending = S.meds.filter(m => !taken[m.id]);
+  if (S.meds.length && pending.length) out.push({lvl:'info',t:'Medicamentos pendientes hoy',b:pending.map(m=>m.name).join(', ')+'. Márcalos abajo cuando los tomes.'});
+  if (today.length < 2) out.push({lvl:'info',t:'Mide más veces hoy',b:'Intenta medir en ayunas y 2 horas después de tu comida principal para ver qué alimentos te suben más.'});
+  return out;
+}
+function foodPlan(){
+  const rs = allReadings(), last = rs[rs.length-1], a3 = avg(inRange(rs,3));
+  const high = (last && last.v > 180) || (a3 && a3 > 180);
+  const prefer = ['Agua natural (2 litros o más)','Verduras: nopales, calabacita, brócoli, ensalada','Proteína: huevo, pollo, pescado, queso panela','Frijoles o lentejas en porción pequeña','Fruta entera con cáscara (manzana, pera) en vez de jugo'];
+  const avoid = ['Refrescos, jugos y bebidas azucaradas','Pan dulce, galletas y postres','Harinas refinadas: tortilla de harina, pan blanco','Bebidas energéticas y café con azúcar'];
+  if (high){ prefer.unshift('Platos con la mitad de verduras'); avoid.push('Arroz, pasta y tortilla en porciones grandes','Alcohol','Fruta muy dulce (mango, plátano maduro, uvas)'); }
+  else prefer.push('Tortilla de maíz: 2 piezas por comida');
+  return {prefer, avoid};
+}
+
+/* ---------- Render ---------- */
+function renderHome(){
+  const rs = allReadings(), last = rs[rs.length-1];
+  if (last){
+    const [cls, txt] = status(last.v, last.c);
+    $('#lastVal').innerHTML = last.v + '<span>mg/dL</span>';
+    $('#lastWhen').textContent = 'Última lectura · ' + fmtD(last.k) + ', ' + fmtT(last.t) + ' · ' + CTX[last.c];
+    $('#lastPill').innerHTML = '<span class="pill '+cls+'">'+txt+'</span>';
+    $('#marker').style.left = 'calc(' + Math.max(0, Math.min(100, (last.v-40)/360*100)) + '% - 2px)';
+  }
+  $('#recs').innerHTML = recommendations().map(r => '<div class="card rec '+r.lvl+'"><h3>'+esc(r.t)+'</h3><p>'+esc(r.b)+'</p></div>').join('');
+  const fp = foodPlan();
+  $('#prefer').innerHTML = fp.prefer.map(x=>'<li>'+esc(x)+'</li>').join('');
+  $('#avoid').innerHTML = fp.avoid.map(x=>'<li>'+esc(x)+'</li>').join('');
+  const day = S.days[dKey(Date.now())], taken = (day && day.taken) || {};
+  $('#todayMeds').innerHTML = '<h3>Medicamentos de hoy</h3>' + (S.meds.length ? S.meds.map(m =>
+    '<div class="med"><div><b>'+esc(m.name)+'</b> <span class="note">'+esc(m.dose||'')+' '+esc(m.times||'')+'</span></div><label class="chk"><input type="checkbox" data-take="'+esc(m.id)+'" '+(taken[m.id]?'checked':'')+'>Tomado</label></div>').join('')
+    : '<p class="note">Agrega tus medicamentos en la sección Medicinas para llevar el control diario.</p>');
+}
+function renderList(){
+  const keys = Object.keys(S.days).filter(k => (S.days[k].entries||[]).length).sort().reverse().slice(0, 30);
+  if (!keys.length){ $('#list').innerHTML = '<p class="note">Aún no hay lecturas. Registra una en Inicio o importa el CSV de tu sensor.</p>'; return; }
+  $('#list').innerHTML = keys.map(k => {
+    const es = [...S.days[k].entries].sort((a,b)=>b.t-a.t);
+    const shown = es.length > 30 ? es.filter((_,i)=>i%Math.ceil(es.length/24)===0) : es;
+    return '<div class="dayh">'+fmtD(k)+' · promedio '+Math.round(avg(es))+' mg/dL'+(es.length>30?' · '+es.length+' lecturas del sensor (muestra)':'')+'</div>' +
+      shown.map(e => { const [cls,txt] = status(e.v,e.c); return '<div class="entry"><div><div class="v">'+e.v+' <span class="pill '+cls+'">'+txt+'</span></div><div class="m">'+fmtT(e.t)+' · '+CTX[e.c]+(e.n?' · '+esc(e.n):'')+'</div></div><button class="ghost sm" data-del="'+k+'|'+e.t+'">Borrar</button></div>'; }).join('');
+  }).join('');
+}
+function renderMeds(){
+  $('#medList').innerHTML = '<h3>Mis medicamentos</h3>' + (S.meds.length ? S.meds.map(m =>
+    '<div class="med"><div><b>'+esc(m.name)+'</b> · '+esc(m.dose||'')+'<div class="note">'+esc(m.times||'Sin horario')+' · '+esc(m.kind||'')+(m.notes?' · '+esc(m.notes):'')+'</div></div><div class="row"><button class="ghost sm" data-edit="'+esc(m.id)+'">Editar</button><button class="ghost sm" data-mdel="'+esc(m.id)+'">Quitar</button></div></div>').join('')
+    : '<p class="note">Todavía no agregas medicamentos.</p>');
+  $('#sType').value = S.settings.type || '2';
+}
+
+/* ---------- Gráficas ---------- */
+const figs = {};
+function svgDraw(id, fn){ const s = $('#'+id); figs[id] = () => { const W = s.clientWidth, H = s.clientHeight; if (W < 80 || H < 80) return; /* oculta: no dibujar */ fn(s, W, H); }; if (!figs[id+'ro']){ figs[id+'ro'] = new ResizeObserver(()=>figs[id]()); figs[id+'ro'].observe(s); } figs[id](); }
+function renderCharts(){
+  const days = S.range, rs = inRange(allReadings(), days);
+  const a = avg(rs), tir = rs.length ? rs.filter(r=>r.v>=70&&r.v<=180).length/rs.length*100 : null;
+  const span = rs.length ? (rs[rs.length-1].t - rs[0].t)/DAY : 0;
+  $('#kAvg').textContent = a ? Math.round(a) : '—';
+  $('#kTir').textContent = tir!=null ? Math.round(tir)+' %' : '—';
+  $('#kGmi').textContent = a ? (3.31 + 0.02392*a).toFixed(1)+' %' : '—';
+  $('#kGmiN').textContent = span >= 10 ? 'estimación con '+Math.round(span)+' días' : 'poco confiable con menos de 14 días';
+  $('#kN').textContent = rs.length;
+
+  svgDraw('gTrend', (s, W, H) => {
+    if (!rs.length){ s.innerHTML = '<text x="'+W/2+'" y="'+H/2+'" text-anchor="middle" fill="currentColor" font-size="14">Sin datos en este periodo</text>'; return; }
+    const L = 38, R = 10, T = 10, B = 26, x0 = Date.now()-days*DAY, x1 = Date.now();
+    const X = t => L + (t-x0)/(x1-x0)*(W-L-R), Y = v => T + (1 - (Math.min(Math.max(v,40),400)-40)/360)*(H-T-B);
+    let g = '<rect x="'+L+'" y="'+Y(180)+'" width="'+(W-L-R)+'" height="'+(Y(70)-Y(180))+'" fill="var(--band)"/>';
+    for (const v of [70,180,250]) g += '<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="var(--line)" stroke-dasharray="'+(v===250?'4 4':'0')+'"/><text x="'+(L-6)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="12" fill="var(--soft)">'+v+'</text>';
+    const step = W < 520 ? Math.ceil(days/4) : Math.ceil(days/7);
+    for (let i=days; i>=0; i-=step){ const t = x1 - i*DAY; g += '<text x="'+X(t)+'" y="'+(H-6)+'" text-anchor="middle" font-size="12" fill="var(--soft)">'+new Date(t).toLocaleDateString('es-MX',{day:'numeric',month:'short'})+'</text>'; }
+    let d = '', prev = null;
+    for (const r of rs){ d += (prev && r.t - prev > 3*3600e3 ? 'M' : (d?'L':'M')) + X(r.t).toFixed(1)+','+Y(r.v).toFixed(1); prev = r.t; }
+    g += '<path d="'+d+'" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linejoin="round"/>';
+    if (rs.length < 300) g += rs.map(r => { const c = status(r.v,r.c)[0]; const f = c==='ok'?'var(--aqua)':c==='high'?'var(--warn)':'var(--alert)'; return '<circle cx="'+X(r.t).toFixed(1)+'" cy="'+Y(r.v).toFixed(1)+'" r="4" fill="'+f+'" stroke="var(--card)" stroke-width="1.5"/>'; }).join('');
+    s.innerHTML = g;
+  });
+  const half = rs.length >= 6 ? [avg(rs.slice(0, rs.length/2|0)), avg(rs.slice(rs.length/2|0))] : null;
+  $('#iTrend').textContent = !rs.length ? '' : half ? (half[1] < half[0]-5 ? 'Tu glucosa va a la baja en este periodo: '+Math.round(half[0])+' → '+Math.round(half[1])+' mg/dL de promedio. ¡Buen avance!' : half[1] > half[0]+5 ? 'Tu promedio subió de '+Math.round(half[0])+' a '+Math.round(half[1])+' mg/dL. Revisa qué cambió en tu comida, horarios o medicamentos.' : 'Tu glucosa se mantiene estable alrededor de '+Math.round(a)+' mg/dL.') : 'Registra más lecturas para ver la tendencia.';
+
+  const bands = [['Muy baja <54',r=>r.v<54,'#B8443B'],['Baja 54–69',r=>r.v>=54&&r.v<70,'var(--alert)'],['En rango 70–180',r=>r.v>=70&&r.v<=180,'var(--aqua)'],['Alta 181–250',r=>r.v>180&&r.v<=250,'var(--warn)'],['Muy alta >250',r=>r.v>250,'var(--navy)']];
+  const pc = bands.map(b => rs.length ? rs.filter(b[1]).length/rs.length*100 : 0);
+  $('#tirBar').innerHTML = rs.length ? bands.map((b,i)=>pc[i]?'<div style="width:'+pc[i]+'%;background:'+b[2]+'" title="'+b[0]+'"></div>':'').join('') : '<div style="width:100%;background:var(--band)"></div>';
+  $('#tirLeg').innerHTML = bands.map((b,i)=>'<span style="--c:'+b[2]+'">'+b[0]+': '+Math.round(pc[i])+' %</span>').join('');
+  $('#iTir').textContent = rs.length ? (pc[2] >= 70 ? '¡Excelente! Estás en rango más del 70 % del tiempo, que es la meta internacional.' : 'Meta: más de 70 % en rango y menos de 4 % abajo de 70. Cada 5 % que subas en rango equivale a una mejora real.') : '';
+
+  const slots = [['Madrugada 0–6',0,6],['Mañana 6–12',6,12],['Tarde 12–18',12,18],['Noche 18–24',18,24]];
+  const sv = slots.map(s => { const x = rs.filter(r => { const h = new Date(r.t).getHours(); return h>=s[1]&&h<s[2]; }); return {n:s[0], a:avg(x), c:x.length}; });
+  $('#byTime').innerHTML = sv.map(s => { const c = s.a==null?'':status(s.a,'despues')[0]; const f = c==='ok'?'var(--aqua)':c==='high'?'var(--warn)':'var(--alert)'; return '<div class="hrow"><span>'+s.n+'</span><div class="tr"><div style="width:'+(s.a?Math.min(100,s.a/300*100):0)+'%;background:'+f+'"></div></div><b>'+(s.a?Math.round(s.a):'—')+'</b></div>'; }).join('');
+  const worst = sv.filter(s=>s.a).sort((x,y)=>y.a-x.a)[0];
+  $('#iTime').textContent = worst ? 'Tu horario más alto es la '+worst.n.split(' ')[0].toLowerCase()+' ('+Math.round(worst.a)+' mg/dL). Enfoca ahí tus cambios: porción, tipo de comida o caminar después.' : '';
+
+  svgDraw('gDaily', (s, W, H) => {
+    const n = Math.min(days, 30), L = 34, B = 22, T = 8;
+    const ds = Array.from({length:n}, (_,i) => { const k = dKey(Date.now()-(n-1-i)*DAY); const e = (S.days[k]&&S.days[k].entries)||[]; return {k, a:avg(e)}; });
+    const Y = v => T + (1 - Math.min(v,350)/350)*(H-T-B), bw = (W-L-6)/n;
+    let g = '<line x1="'+L+'" x2="'+W+'" y1="'+Y(180)+'" y2="'+Y(180)+'" stroke="var(--alert)" stroke-dasharray="4 4"/><text x="'+(L-4)+'" y="'+(Y(180)+4)+'" text-anchor="end" font-size="12" fill="var(--soft)">180</text>';
+    ds.forEach((d,i) => { if (d.a==null) return; const c = d.a<=180?'var(--aqua)':d.a<=250?'var(--warn)':'var(--alert)'; g += '<rect x="'+(L+i*bw+bw*.15).toFixed(1)+'" y="'+Y(d.a).toFixed(1)+'" width="'+(bw*.7).toFixed(1)+'" height="'+(Y(0)-Y(d.a)).toFixed(1)+'" rx="3" fill="'+c+'"><title>'+fmtD(d.k)+': '+Math.round(d.a)+' mg/dL</title></rect>'; });
+    const lab = W < 520 ? Math.ceil(n/4) : Math.ceil(n/8);
+    ds.forEach((d,i) => { if ((n-1-i)%lab===0) g += '<text x="'+(L+i*bw+bw/2).toFixed(1)+'" y="'+(H-5)+'" text-anchor="middle" font-size="12" fill="var(--soft)">'+Number(d.k.slice(8))+'</text>'; });
+    s.innerHTML = g;
+  });
+  const dd = Array.from({length:Math.min(days,30)},(_,i)=>avg((S.days[dKey(Date.now()-i*DAY)]||{}).entries||[])).filter(x=>x!=null);
+  $('#iDaily').textContent = dd.length ? dd.filter(x=>x<=180).length+' de '+dd.length+' días con promedio en meta (180 o menos).' : '';
+}
+function renderAll(){ renderHome(); renderList(); renderMeds(); if (location.hash==='#graficas') renderCharts(); }
+
+/* ---------- Navegación ---------- */
+function route(){
+  const v = (location.hash||'#inicio').slice(1), ok = ['inicio','registros','graficas','meds'].includes(v) ? v : 'inicio';
+  document.querySelectorAll('.view').forEach(s => s.classList.toggle('on', s.id==='v-'+ok));
+  document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.dataset.v===ok));
+  if (ok==='graficas') renderCharts();
+  window.scrollTo(0,0);
+}
+window.addEventListener('hashchange', route);
+
+/* ---------- Eventos ---------- */
+const nowLocal = () => { const d = new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,16); };
+$('#rTime').value = nowLocal();
+$('#fRead').addEventListener('submit', async e => {
+  e.preventDefault();
+  const v = Math.round(+$('#rVal').value), t = new Date($('#rTime').value).getTime();
+  if (!(v>=20 && v<=600) || isNaN(t)) return toast('Revisa el valor y la fecha');
+  const n = await addReadings([{t, v, c:$('#rCtx').value, n:$('#rNote').value.trim(), s:'manual'}]);
+  if (!n) return toast('Ya existe una lectura en ese minuto');
+  $('#rVal').value = ''; $('#rNote').value = ''; $('#rTime').value = nowLocal();
+  toast('Lectura guardada'); window.scrollTo({top: $('#recs').offsetTop-80, behavior:'smooth'});
+});
+document.addEventListener('click', async e => {
+  const del = e.target.closest('[data-del]');
+  if (del){
+    if (del.dataset.armed){ const [k,t] = del.dataset.del.split('|'); await delReading(k, +t); toast('Lectura borrada'); }
+    else { del.dataset.armed = 1; del.textContent = '¿Seguro?'; del.classList.add('danger'); setTimeout(()=>{ if (del.isConnected){ delete del.dataset.armed; del.textContent='Borrar'; del.classList.remove('danger'); } }, 3000); }
+  }
+  const ed = e.target.closest('[data-edit]');
+  if (ed){ const m = S.meds.find(x=>x.id===ed.dataset.edit); if (!m) return;
+    $('#mId').value = m.id; $('#mName').value = m.name; $('#mDose').value = m.dose||''; $('#mTimes').value = m.times||''; $('#mKind').value = m.kind||'oral'; $('#mNotes').value = m.notes||'';
+    $('#medFormT').textContent = 'Editar medicamento'; $('#mCancel').style.display = ''; $('#mName').focus(); }
+  const md = e.target.closest('[data-mdel]');
+  if (md){
+    if (md.dataset.armed){ S.meds = S.meds.filter(x=>x.id!==md.dataset.mdel); renderAll(); await save('meds',{list:S.meds}); }
+    else { md.dataset.armed = 1; md.textContent = '¿Quitar?'; md.classList.add('danger'); }
+  }
+  const rb = e.target.closest('#range button');
+  if (rb){ S.range = +rb.dataset.d; document.querySelectorAll('#range button').forEach(b=>b.classList.toggle('on', b===rb)); renderCharts(); }
+});
+document.addEventListener('change', async e => {
+  const tk = e.target.closest('[data-take]');
+  if (tk){ const k = dKey(Date.now()); const day = S.days[k] || (S.days[k] = {entries:[], taken:{}});
+    if (tk.checked) day.taken[tk.dataset.take] = Date.now(); else delete day.taken[tk.dataset.take];
+    renderHome(); await save('d-'+k, day); }
+  if (e.target.id === 'sType'){ S.settings.type = e.target.value; renderHome(); await save('settings', S.settings); }
+});
+const resetMed = () => { $('#fMed').reset(); $('#mId').value=''; $('#medFormT').textContent='Agregar medicamento'; $('#mCancel').style.display='none'; };
+$('#mCancel').addEventListener('click', resetMed);
+$('#fMed').addEventListener('submit', async e => {
+  e.preventDefault();
+  const m = {id: $('#mId').value || 'm'+Date.now().toString(36), name:$('#mName').value.trim(), dose:$('#mDose').value.trim(), times:$('#mTimes').value.trim(), kind:$('#mKind').value, notes:$('#mNotes').value.trim()};
+  if (!m.name) return;
+  const i = S.meds.findIndex(x=>x.id===m.id); if (i>=0) S.meds[i] = m; else S.meds.push(m);
+  resetMed(); renderAll(); toast('Medicamento guardado');
+  await save('meds', {list:S.meds});
+});
+
+/* ---------- Importar CSV de Dexcom Clarity / LibreView ---------- */
+function parseCSV(text){
+  const lines = text.split(/\r?\n/).filter(l=>l.trim());
+  const delim = (lines.slice(0,5).join('').match(/;/g)||[]).length > (lines.slice(0,5).join('').match(/,/g)||[]).length ? ';' : (lines[0].includes('\t') ? '\t' : ',');
+  const split = l => { const out=[]; let cur='', q=false; for (const ch of l){ if (ch==='"') q=!q; else if (ch===delim && !q){ out.push(cur); cur=''; } else cur+=ch; } out.push(cur); return out.map(s=>s.trim()); };
+  let hi = -1, tCol = -1, gCols = [];
+  for (let i=0;i<Math.min(lines.length,20);i++){
+    const h = split(lines[i]).map(x=>x.toLowerCase());
+    const gc = h.map((x,j)=>(/glucos[ae]/.test(x) && !/(tipo|type|unit|unidad)/.test(x))?j:-1).filter(j=>j>=0);
+    const tc = h.findIndex(x=>/timestamp|marca de tiempo|fecha|date|time/.test(x));
+    if (gc.length && tc>=0){ hi=i; tCol=tc; gCols=gc; break; }
+  }
+  if (hi<0) return [];
+  const rows = lines.slice(hi+1).map(split);
+  // Detecta si las fechas vienen día-primero (dd-mm-aaaa) o mes-primero
+  let dayFirst = true;
+  for (const r of rows){ const m = (r[tCol]||'').match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/); if (m){ if (+m[1]>12){dayFirst=true;break;} if (+m[2]>12){dayFirst=false;break;} } }
+  const pt = s => {
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return new Date(s.replace(' ','T')).getTime();
+    const m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})[ T](\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp]\.?\s?[Mm]\.?)?/);
+    if (!m) return NaN;
+    let h = +m[4]; const ap = (m[6]||'').toLowerCase();
+    if (ap.startsWith('p') && h<12) h+=12; if (ap.startsWith('a') && h===12) h=0;
+    const D = dayFirst ? +m[1] : +m[2], M = dayFirst ? +m[2] : +m[1];
+    return new Date(+m[3], M-1, D, h, +m[5]).getTime();
+  };
+  const out = [];
+  for (const r of rows){
+    const t = pt(r[tCol]||''); if (isNaN(t)) continue;
+    let raw = gCols.map(j=>r[j]).find(x=>x && x!==''); if (!raw) continue;
+    let v = /^low|^baj/i.test(raw) ? 39 : /^high|^alt/i.test(raw) ? 401 : parseFloat(raw.replace(',','.'));
+    if (v>0 && v<35) v = v*18; // mmol/L → mg/dL
+    if (v>=20 && v<=600) out.push({t, v:Math.round(v), c:'sensor', n:'', s:'csv'});
+  }
+  return out;
+}
+$('#csv').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  $('#csvMsg').textContent = 'Leyendo archivo…';
+  const list = parseCSV(await f.text());
+  if (!list.length){ $('#csvMsg').textContent = 'No encontré columnas de fecha y glucosa en el archivo. Exporta el CSV desde Dexcom Clarity o LibreView sin editarlo.'; return; }
+  $('#csvMsg').textContent = 'Guardando '+list.length+' lecturas…';
+  const n = await addReadings(list);
+  $('#csvMsg').textContent = n ? 'Listo: se importaron las lecturas de '+new Set(list.map(r=>dKey(r.t))).size+' días.' : 'Esas lecturas ya estaban registradas.';
+  e.target.value = '';
+});
+
+/* ---------- Reporte para el médico ---------- */
+$('#copyRep').addEventListener('click', async () => {
+  const rs = inRange(allReadings(), 14);
+  if (!rs.length) return toast('No hay lecturas en los últimos 14 días');
+  const a = avg(rs), tir = rs.filter(r=>r.v>=70&&r.v<=180).length/rs.length*100;
+  const byCtx = Object.keys(CTX).map(c=>{ const x = rs.filter(r=>r.c===c); return x.length ? '- '+CTX[c]+': '+Math.round(avg(x))+' mg/dL ('+x.length+' lecturas)' : ''; }).filter(Boolean);
+  const txt = ['Reporte de glucosa · últimos 14 días','Promedio: '+Math.round(a)+' mg/dL','Tiempo en rango 70–180: '+Math.round(tir)+' %','Lecturas bajo 70: '+rs.filter(r=>r.v<70).length,'Lecturas sobre 250: '+rs.filter(r=>r.v>250).length,'Mínima: '+Math.min(...rs.map(r=>r.v))+' · Máxima: '+Math.max(...rs.map(r=>r.v)),'Por momento:',...byCtx,'Medicamentos: '+(S.meds.map(m=>m.name+' '+(m.dose||'')+' '+(m.times||'')).join('; ')||'ninguno registrado')].join('\n');
+  try{ await navigator.clipboard.writeText(txt); toast('Reporte copiado'); }catch(err){ toast('No se pudo copiar en este navegador'); }
+});
+
+route();
+init();
+
+/* ---------- App instalable: service worker para abrir sin internet ---------- */
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
