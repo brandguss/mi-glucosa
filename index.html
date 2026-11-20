@@ -149,6 +149,7 @@ details.fold[open] summary::after{transform:rotate(-135deg);margin-top:4px}
 .gtabs button.on{background:var(--navy);color:var(--ice)}
 .gpane{display:none}.gpane.on{display:block}
 .seg.small button{min-height:34px;padding:4px 12px;font-size:13px}
+label.btnlike{display:flex;align-items:center;justify-content:center;margin:0;min-height:46px;padding:10px 16px;border-radius:12px;background:var(--teal);color:#fff;font-weight:700;font-size:16px;cursor:pointer;text-align:center}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--teal);color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;display:none;z-index:9;max-width:90vw}
 @media(max-width:480px){.lists{grid-template-columns:1fr}.hrow{grid-template-columns:6.5em minmax(0,1fr) 4em}}
 @media(prefers-reduced-motion:reduce){.scale i{transition:none}}
@@ -183,8 +184,14 @@ details.fold[open] summary::after{transform:rotate(-135deg);margin-top:4px}
     <div class="lbl" id="lastWhen">Sin lecturas todavía</div>
     <div class="big" id="lastVal">—<span>mg/dL</span></div>
     <div style="margin-top:8px" id="lastPill"></div>
-    <div class="scale"><i id="marker" style="left:0"></i></div>
+    <div class="scale"><i id="marker" style="left:0;display:none"></i></div>
     <div class="ticks"><span style="left:0">40</span><span style="left:25%">70</span><span style="left:50%">180</span><span style="left:75%">250</span><span style="left:100%">400</span></div>
+  </div>
+
+  <div class="card" id="restoreHint" style="display:none;border:2px dashed var(--aqua)">
+    <h3>¿Ya tenías datos guardados?</h3>
+    <p class="note" style="margin-top:0">Si descargaste un respaldo desde Safari u otro celular, súbelo aquí y se cargan tus lecturas, pastillas, pesos y perfil.</p>
+    <label class="btnlike" for="bImport">Subir respaldo</label>
   </div>
 
   <div class="marquee" id="marquee" aria-label="Mensajes de motivación"><div class="mq-track" id="mqTrack"></div></div>
@@ -249,8 +256,10 @@ details.fold[open] summary::after{transform:rotate(-135deg);margin-top:4px}
   </div>
   <div class="card">
     <h3>Respaldo</h3>
-    <p class="note" style="margin-top:0">Descarga una copia de todos tus datos o restaura una copia anterior.</p>
-    <div class="row"><button class="ghost sm" id="bExport">Descargar respaldo</button><label class="ghost sm" for="bImport" style="margin:0;display:inline-flex;align-items:center;min-height:36px;padding:6px 12px;border:1px solid var(--line);border-radius:12px;color:var(--teal);font-weight:700;font-size:14px;cursor:pointer">Restaurar respaldo</label><input type="file" id="bImport" accept=".json,application/json" style="display:none"></div>
+    <p class="note" style="margin-top:0">Descarga una copia de todos tus datos y guárdala en Archivos o iCloud. Para recuperarla, toca Subir respaldo y elige el archivo <b>mi-glucosa-respaldo-….json</b>.</p>
+    <div class="grid2"><button class="ghost" id="bExport">Descargar respaldo</button><label class="btnlike" for="bImport">Subir respaldo</label></div>
+    <input type="file" id="bImport" style="display:none">
+    <p class="note" id="bMsg" style="margin-bottom:0"></p>
   </div>
   <div class="row" style="margin-bottom:10px"><button class="ghost sm" id="copyRep">Copiar reporte para mi médico (14 días)</button></div>
   <div class="card" id="list"></div>
@@ -372,6 +381,11 @@ details.fold[open] summary::after{transform:rotate(-135deg);margin-top:4px}
     </form>
   </div>
 
+  <div class="card">
+    <h3>Respaldo de mis datos</h3>
+    <p class="note" style="margin-top:0">En iPhone, Safari y la app de tu pantalla de inicio guardan datos por separado. Usa el respaldo para pasar tus datos de uno a otro o a un celular nuevo.</p>
+    <div class="grid2"><button class="ghost" data-export="1">Descargar respaldo</button><label class="btnlike" for="bImport">Subir respaldo</label></div>
+  </div>
   <div class="card">
     <h3>Cuenta</h3>
     <p class="note" style="margin-top:0" id="accInfo">Modo local: tus datos se guardan solo en este dispositivo.</p>
@@ -565,26 +579,66 @@ function snapshotDocs(){
   docs.meds = {list:S.meds}; docs.settings = S.settings; docs.weights = {list:S.weights};
   return docs;
 }
-$('#bExport').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify({app:'mi-glucosa', version:1, exported:new Date().toISOString(), docs:snapshotDocs()}, null, 1)], {type:'application/json'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'mi-glucosa-respaldo-'+dKey(Date.now())+'.json';
+async function exportBackup(){
+  const name = 'mi-glucosa-respaldo-'+dKey(Date.now())+'.json';
+  const text = JSON.stringify({app:'mi-glucosa', version:1, exported:new Date().toISOString(), docs:snapshotDocs()}, null, 1);
+  // En iPhone, la hoja de Compartir permite "Guardar en Archivos"
+  try{
+    const file = new File([text], name, {type:'application/json'});
+    if (navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:'Respaldo Mi Glucosa'}); toast('Respaldo listo'); return; }
+  }catch(err){ if (err && err.name === 'AbortError') return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type:'application/json'})); a.download = name;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
   toast('Respaldo descargado');
-});
+}
+$('#bExport').addEventListener('click', exportBackup);
+document.addEventListener('click', e => { if (e.target.closest('[data-export]')) exportBackup(); });
 $('#bImport').addEventListener('change', async e => {
   const f = e.target.files[0]; if (!f) return;
-  try{
-    const j = JSON.parse(await f.text());
-    if (j.app !== 'mi-glucosa' || !j.docs) throw 0;
-    const all = [];
-    for (const id in j.docs) if (id.startsWith('d-')) for (const r of (j.docs[id].entries||[])) all.push(r);
-    if (j.docs.meds && Array.isArray(j.docs.meds.list)){ for (const m of j.docs.meds.list) if (!S.meds.some(x=>x.id===m.id)) S.meds.push(normMed(m)); await save('meds',{list:S.meds}); }
-    if (j.docs.weights && Array.isArray(j.docs.weights.list)){ for (const w of j.docs.weights.list) if (!S.weights.some(x=>dKey(x.t)===dKey(w.t))) S.weights.push(w); S.weights.sort((a,b)=>a.t-b.t); await save('weights',{list:S.weights}); }
-    if (j.docs.settings){ S.settings = {...S.settings, ...j.docs.settings}; await save('settings', S.settings); }
-    const n = await addReadings(all);
-    toast(n ? 'Respaldo restaurado' : 'Esos datos ya estaban registrados');
-  }catch(x){ toast('El archivo no es un respaldo válido'); }
   e.target.value = '';
+  let j;
+  try{ j = JSON.parse(await f.text()); }catch(x){ j = null; }
+  if (!j || j.app !== 'mi-glucosa' || !j.docs){ toast('Ese archivo no es un respaldo de Mi Glucosa'); $('#bMsg').textContent = 'Elige el archivo que empieza con mi-glucosa-respaldo y termina en .json.'; return; }
+  let nRead = 0, nPill = 0, nW = 0, nM = 0;
+  const changed = new Set();
+  // Lecturas y pastillas tomadas, día por día
+  for (const id in j.docs){
+    if (!id.startsWith('d-')) continue;
+    const k = id.slice(2), src = j.docs[id] || {};
+    const day = S.days[k] || (S.days[k] = {entries:[], taken:{}});
+    for (const r of (src.entries || [])){
+      if (!r || typeof r.t !== 'number' || typeof r.v !== 'number') continue;
+      if (day.entries.some(x => Math.abs(x.t - r.t) < 60000)) continue;
+      day.entries.push(r); nRead++; changed.add(k);
+    }
+    for (const key in (src.taken || {})) if (!day.taken[key]){ day.taken[key] = src.taken[key]; nPill++; changed.add(k); }
+    day.entries.sort((a,b)=>a.t-b.t);
+    if (!day.entries.length && !Object.keys(day.taken).length) delete S.days[k];
+  }
+  // Medicamentos (y horarios que falten)
+  if (j.docs.meds && Array.isArray(j.docs.meds.list)){
+    for (const raw of j.docs.meds.list){
+      const m = normMed(raw), cur = S.meds.find(x => x.id === m.id);
+      if (!cur){ S.meds.push(m); nM++; }
+      else for (const sc of m.sched) if (!cur.sched.some(x => x.time === sc.time)){ cur.sched.push(sc); cur.sched.sort((a,b)=>a.time.localeCompare(b.time)); }
+    }
+  }
+  // Pesos
+  if (j.docs.weights && Array.isArray(j.docs.weights.list)){
+    for (const w of j.docs.weights.list) if (w && w.kg && !S.weights.some(x => dKey(x.t) === dKey(w.t))){ S.weights.push(w); nW++; }
+    S.weights.sort((a,b)=>a.t-b.t);
+  }
+  // Perfil: el respaldo completa lo que falte aquí
+  if (j.docs.settings){ const cur = S.settings; S.settings = {...j.docs.settings}; for (const k in cur) if (cur[k] !== '' && cur[k] != null && !(k in j.docs.settings)) S.settings[k] = cur[k]; }
+  renderAll();
+  for (const k of changed) if (S.days[k]) await save('d-'+k, S.days[k]);
+  await save('meds', {list:S.meds}); await save('weights', {list:S.weights}); await save('settings', S.settings);
+  const msg = (nRead||nPill||nW||nM) ? 'Restaurado: '+nRead+' lecturas, '+nPill+' tomas de pastillas, '+nW+' pesos y '+nM+' medicamentos.' : 'Esos datos ya estaban en la app.';
+  toast(nRead||nPill||nW||nM ? 'Respaldo restaurado' : 'Nada nuevo que restaurar');
+  $('#bMsg').textContent = msg;
+  if (S.settings.name) $('#hello').textContent = 'Hola, ' + S.settings.name.split(' ')[0];
+  location.hash = '#inicio';
+  setTimeout(()=>toast(msg), 2700);
 });
 
 /* ---------- Altas y bajas de lecturas ---------- */
@@ -725,7 +779,7 @@ function renderHome(){
     $('#lastVal').innerHTML = last.v + '<span>mg/dL</span>';
     $('#lastWhen').textContent = 'Última lectura · ' + fmtD(last.k) + ', ' + fmtT(last.t) + ' · ' + CTX[last.c];
     $('#lastPill').innerHTML = '<span class="pill '+cls+'">'+txt+'</span>';
-    $('#marker').style.left = scalePos(last.v) + '%';
+    $('#marker').style.left = scalePos(last.v) + '%'; $('#marker').style.display = '';
   }
   const order = {urgent:0, warn:1, good:2, info:3};
   const recs = recommendations().map((r,i)=>({...r,i})).sort((a,b)=>order[a.lvl]-order[b.lvl] || a.i-b.i);
@@ -748,6 +802,7 @@ function renderHome(){
   $('#goalChips').innerHTML = ['ayunas','antes','despues','dormir'].map(c => '<span>'+esc(CTX[c])+': '+(c==='despues'?'menos de ':'hasta ')+goalMax(c)+'</span>').join('');
   updateTarget('r'); updateTarget('x');
   renderMarquee();
+  $('#restoreHint').style.display = (!allReadings().length && !S.meds.length && !S.weights.length) ? '' : 'none';
 }
 /* Muestra la meta del momento elegido y avisa si el valor escrito la pasa */
 function updateTarget(p = 'r'){
