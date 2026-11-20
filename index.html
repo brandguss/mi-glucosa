@@ -28,11 +28,12 @@
 --soft:light-dark(#4F6178,#A9C3CC);--line:light-dark(#D3E2E7,#24357A);--band:light-dark(#D4EBEE,#16306A)}
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Manrope,system-ui,sans-serif;overflow-x:clip;padding-bottom:84px}
-header{background:var(--navy);color:var(--ice);padding:18px max(5vw,16px) 14px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+html{-webkit-text-size-adjust:100%;background:var(--navy)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Manrope,system-ui,sans-serif;overflow-x:clip;padding-bottom:calc(84px + env(safe-area-inset-bottom));min-height:100dvh;-webkit-tap-highlight-color:transparent}
+header{position:sticky;top:0;z-index:6;background:var(--navy);color:var(--ice);padding:18px max(5vw,16px,env(safe-area-inset-right)) 14px max(5vw,16px,env(safe-area-inset-left));display:flex;justify-content:space-between;align-items:center;gap:12px}
 header h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-.01em}
 header small{color:var(--aqua);font-size:14px}
-main{max-width:720px;margin:0 auto;padding:16px max(4vw,14px)}
+main{max-width:720px;margin:0 auto;padding:16px max(4vw,14px,env(safe-area-inset-right)) 16px max(4vw,14px,env(safe-area-inset-left))}
 section.view{display:none}section.view.on{display:block}
 h2{font-size:22px;margin:22px 0 10px;line-height:1.15}
 h3{font-size:17px;margin:0 0 6px}
@@ -47,6 +48,9 @@ h3{font-size:17px;margin:0 0 6px}
 .pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:13px;font-weight:700;white-space:nowrap}
 .ok{background:var(--aqua);color:var(--navy)}.low,.crit{background:var(--alert);color:#fff}.high{background:var(--warn);color:var(--navy)}.vhigh{background:var(--alert);color:#fff}
 label{display:block;font-size:14px;font-weight:600;color:var(--soft);margin-bottom:4px}
+input[type=date],input[type=datetime-local],input[type=time]{-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%;text-align:left}
+input::-webkit-date-and-time-value{text-align:left;margin:0}
+select{-webkit-appearance:none;appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--soft) 50%),linear-gradient(135deg,var(--soft) 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 12px) 50%;background-size:6px 6px;background-repeat:no-repeat;padding-right:32px!important}
 input,select,textarea{width:100%;font:16px Manrope,sans-serif;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-height:46px}
 input:focus,select:focus,textarea:focus,button:focus-visible{outline:3px solid var(--aqua);outline-offset:1px}
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -85,7 +89,7 @@ button.danger{background:var(--alert)}
 .med{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
 .med:last-child{border-bottom:0}
 .chk{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--ink);margin:0}
-.chk input{width:24px;height:24px;min-height:0}
+.chk input{width:26px;height:26px;min-height:0;accent-color:var(--teal)}
 nav{position:fixed;bottom:0;left:0;right:0;background:var(--navy);display:grid;grid-template-columns:repeat(5,1fr);padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:5}
 nav a{color:#A9C3CC;text-decoration:none;font-size:12px;font-weight:600;text-align:center;padding:6px 2px;border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:48px;justify-content:center}
 nav a svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2}
@@ -110,6 +114,19 @@ header{padding-top:max(18px,env(safe-area-inset-top))}
 .taken{font-size:13px;color:var(--teal);font-weight:700;white-space:nowrap}
 .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 @media(max-width:480px){.grid3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.medcard{border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:12px}
+.medhead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.sched{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px dashed var(--line)}
+.sched .hr{font-size:20px;font-weight:800;white-space:nowrap}
+.addsched{display:grid;grid-template-columns:minmax(0,7.5em) minmax(0,1fr) auto;gap:8px;margin-top:10px;align-items:end}
+.addsched input{min-height:42px;padding:9px 10px}
+.addsched button{min-height:42px;padding:8px 14px}
+@media(max-width:430px){.addsched{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.addsched button{grid-column:1/-1}}
+.dose{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.dose:last-child{border-bottom:0}
+.dose .hr{font-size:18px;font-weight:800;min-width:3.2em;white-space:nowrap}
+.dose.late .hr{color:var(--alert)}
+.dose .info{flex:1}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--teal);color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;display:none;z-index:9;max-width:90vw}
 @media(max-width:480px){.lists{grid-template-columns:1fr}.hrow{grid-template-columns:6.5em minmax(0,1fr) 4em}}
 @media(prefers-reduced-motion:reduce){.scale i{transition:none}}
@@ -221,13 +238,13 @@ header{padding-top:max(18px,env(safe-area-inset-top))}
       <input type="hidden" id="mId">
       <div class="grid2">
         <div class="field"><label for="mName">Nombre</label><input id="mName" required maxlength="60" placeholder="Ej. Metformina"></div>
-        <div class="field"><label for="mDose">Dosis</label><input id="mDose" maxlength="40" placeholder="Ej. 850 mg"></div>
+        <div class="field"><label for="mDose">Dosis habitual</label><input id="mDose" maxlength="40" placeholder="Ej. 850 mg"></div>
       </div>
       <div class="grid2">
-        <div class="field"><label for="mTimes">Horario</label><input id="mTimes" maxlength="40" placeholder="Ej. 8:00 y 20:00"></div>
         <div class="field"><label for="mKind">Tipo</label><select id="mKind"><option value="oral">Oral (pastilla)</option><option value="insulina">Insulina</option><option value="inyectable">Otro inyectable</option><option value="otro">Otro</option></select></div>
+        <div class="field"><label for="mNotes">Notas</label><input id="mNotes" maxlength="120" placeholder="Ej. tomar con comida"></div>
       </div>
-      <div class="field"><label for="mNotes">Notas</label><input id="mNotes" maxlength="120" placeholder="Ej. con el desayuno"></div>
+      <p class="note" style="margin-top:0">Después de guardarlo, agrégale los horarios que necesites (uno por uno) en la lista de arriba.</p>
       <div class="row"><button type="submit">Guardar</button><button type="button" class="ghost" id="mCancel" style="display:none">Cancelar</button></div>
     </form>
   </div>
@@ -292,9 +309,9 @@ header{padding-top:max(18px,env(safe-area-inset-top))}
 
 <nav>
   <a href="#inicio" data-v="inicio"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Inicio</a>
-  <a href="#registros" data-v="registros"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg>Registros</a>
   <a href="#graficas" data-v="graficas"><svg viewBox="0 0 24 24"><path d="M3 20h18M6 16l4-6 4 3 5-8"/></svg>Gráficas</a>
   <a href="#meds" data-v="meds"><svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="7" rx="3.5" transform="rotate(-35 12 12.5)"/><path d="M10 7l5 8"/></svg>Medicinas</a>
+  <a href="#registros" data-v="registros"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg>Registros</a>
   <a href="#perfil" data-v="perfil"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Perfil</a>
 </nav>
 <div class="toast" id="toast"></div>
@@ -355,9 +372,30 @@ function remove(id){
   writes[id] = (writes[id]||Promise.resolve()).then(()=>ref.delete()).catch(()=>toast('No se pudo borrar'));
   return writes[id];
 }
+/* Normaliza un medicamento: cada horario es independiente {id, time:'HH:MM', dose, note} */
+function normMed(m){
+  m = {...m, sched:[...(m.sched||[])]};
+  if (!m.sched.length && typeof m.times === 'string' && m.times.trim()){
+    const re = /(\d{1,2})(?::(\d{2}))?\s*(am|pm|a\.m\.|p\.m\.)?/gi; let x, i = 0;
+    while ((x = re.exec(m.times))){ let hh = +x[1]; const ap = (x[3]||'').toLowerCase(); if (ap.startsWith('p') && hh<12) hh+=12; if (ap.startsWith('a') && hh===12) hh=0; if (hh<24) m.sched.push({id:'s'+(i++)+Date.now().toString(36), time:pad(hh)+':'+(x[2]||'00'), dose:'', note:''}); }
+  }
+  delete m.times;
+  m.sched.sort((a,b)=>a.time.localeCompare(b.time));
+  return m;
+}
+/* Todas las tomas del día: cada horario de cada medicamento es una toma */
+function dosesToday(){
+  const out = [];
+  for (const m of S.meds){
+    if (!m.sched.length) out.push({key:m.id, m, s:null, time:''});
+    else for (const s of m.sched) out.push({key:m.id+'@'+s.id, m, s, time:s.time});
+  }
+  return out.sort((a,b)=>(a.time||'99').localeCompare(b.time||'99'));
+}
+const nowHM = () => { const d = new Date(); return pad(d.getHours())+':'+pad(d.getMinutes()); };
 function ingest(id, data){
   if (id.startsWith('d-')) S.days[id.slice(2)] = { entries:[...(data.entries||[])], taken:{...(data.taken||{})} };
-  else if (id === 'meds') S.meds = [...(data.list||[])];
+  else if (id === 'meds') S.meds = (data.list||[]).map(normMed);
   else if (id === 'settings') S.settings = {...S.settings, ...data};
   else if (id === 'weights') S.weights = [...(data.list||[])].sort((a,b)=>a.t-b.t);
 }
@@ -462,7 +500,7 @@ $('#bImport').addEventListener('change', async e => {
     if (j.app !== 'mi-glucosa' || !j.docs) throw 0;
     const all = [];
     for (const id in j.docs) if (id.startsWith('d-')) for (const r of (j.docs[id].entries||[])) all.push(r);
-    if (j.docs.meds && Array.isArray(j.docs.meds.list)){ for (const m of j.docs.meds.list) if (!S.meds.some(x=>x.id===m.id)) S.meds.push(m); await save('meds',{list:S.meds}); }
+    if (j.docs.meds && Array.isArray(j.docs.meds.list)){ for (const m of j.docs.meds.list) if (!S.meds.some(x=>x.id===m.id)) S.meds.push(normMed(m)); await save('meds',{list:S.meds}); }
     if (j.docs.weights && Array.isArray(j.docs.weights.list)){ for (const w of j.docs.weights.list) if (!S.weights.some(x=>dKey(x.t)===dKey(w.t))) S.weights.push(w); S.weights.sort((a,b)=>a.t-b.t); await save('weights',{list:S.weights}); }
     if (j.docs.settings){ S.settings = {...S.settings, ...j.docs.settings}; await save('settings', S.settings); }
     const n = await addReadings(all);
@@ -517,8 +555,8 @@ function recommendations(){
   if (highPost.length) out.push({lvl:'info',t:'Subidas después de comer',b:'Come primero las verduras y la proteína, deja tortilla, arroz o pan al final y reduce la porción a la mitad.'});
 
   const day = S.days[dKey(Date.now())], taken = (day && day.taken) || {};
-  const pending = S.meds.filter(m => !taken[m.id]);
-  if (S.meds.length && pending.length) out.push({lvl:'info',t:'Medicamentos pendientes hoy',b:pending.map(m=>m.name).join(', ')+'. Márcalos en Registrar lectura cuando los tomes.'});
+  const late = dosesToday().filter(d => d.time && d.time <= nowHM() && !taken[d.key]);
+  if (late.length) out.push({lvl:'warn',t: late.length===1 ? 'Te falta una toma de hoy' : 'Te faltan '+late.length+' tomas de hoy',b:late.map(d=>d.m.name+' de las '+d.time).join(', ')+'. Si se te pasó, revisa con tu médico o farmacéutico qué hacer con una dosis olvidada; no tomes doble dosis por tu cuenta.'});
   if (today.length < 2) out.push({lvl:'info',t:'Mide más veces hoy',b:'Intenta medir en ayunas y 2 horas después de tu comida principal para ver qué alimentos te suben más.'});
 
   // Recomendaciones según peso, altura y actividad
@@ -573,9 +611,12 @@ function renderHome(){
   $('#prefer').innerHTML = fp.prefer.map(x=>'<li>'+esc(x)+'</li>').join('');
   $('#avoid').innerHTML = fp.avoid.map(x=>'<li>'+esc(x)+'</li>').join('');
   const day = S.days[dKey(Date.now())], taken = (day && day.taken) || {};
-  const done = S.meds.filter(m => taken[m.id]).length;
-  $('#todayMeds').innerHTML = '<h3>Pastillas y medicamentos de hoy'+(S.meds.length?' · '+done+' de '+S.meds.length:'')+'</h3>' + (S.meds.length ? S.meds.map(m =>
-    '<div class="med"><div><b>'+esc(m.name)+'</b> <span class="note">'+esc(m.dose||'')+' '+esc(m.times||'')+'</span>'+(taken[m.id]?'<div class="taken">Tomado a las '+fmtT(taken[m.id])+'</div>':'')+'</div><label class="chk"><input type="checkbox" data-take="'+esc(m.id)+'" '+(taken[m.id]?'checked':'')+'>Tomado</label></div>').join('')
+  const doses = dosesToday(), done = doses.filter(d => taken[d.key]).length, hm = nowHM();
+  $('#todayMeds').innerHTML = '<h3>Pastillas y medicamentos de hoy'+(doses.length?' · '+done+' de '+doses.length:'')+'</h3>' + (doses.length ? doses.map(d => {
+    const late = d.time && d.time <= hm && !taken[d.key];
+    return '<div class="dose'+(late?' late':'')+'"><span class="hr">'+(d.time||'—')+'</span><div class="info"><b>'+esc(d.m.name)+'</b> <span class="note">'+esc((d.s&&d.s.dose)||d.m.dose||'')+(d.s&&d.s.note?' · '+esc(d.s.note):'')+'</span>'+
+      (taken[d.key]?'<div class="taken">Tomado a las '+fmtT(taken[d.key])+'</div>':late?'<div class="taken" style="color:var(--alert)">Pendiente</div>':'')+
+      '</div><label class="chk"><input type="checkbox" data-take="'+esc(d.key)+'" '+(taken[d.key]?'checked':'')+' aria-label="Tomado '+esc(d.m.name)+' '+d.time+'"></label></div>'; }).join('')
     : '<p class="note">Aún no agregas medicamentos. <a href="#meds" style="color:var(--teal);font-weight:700">Agregar mis pastillas</a></p>');
   $('#goalChips').innerHTML = ['ayunas','antes','despues','dormir'].map(c => '<span>'+esc(CTX[c])+': '+(c==='despues'?'menos de ':'hasta ')+goalMax(c)+'</span>').join('');
   updateTarget();
@@ -628,9 +669,15 @@ function renderList(){
   }).join('');
 }
 function renderMeds(){
+  const KIND = {oral:'Oral', insulina:'Insulina', inyectable:'Inyectable', otro:'Otro'};
   $('#medList').innerHTML = '<h3>Mis medicamentos</h3>' + (S.meds.length ? S.meds.map(m =>
-    '<div class="med"><div><b>'+esc(m.name)+'</b> · '+esc(m.dose||'')+'<div class="note">'+esc(m.times||'Sin horario')+' · '+esc(m.kind||'')+(m.notes?' · '+esc(m.notes):'')+'</div></div><div class="row"><button class="ghost sm" data-edit="'+esc(m.id)+'">Editar</button><button class="ghost sm" data-mdel="'+esc(m.id)+'">Quitar</button></div></div>').join('')
-    : '<p class="note">Todavía no agregas medicamentos.</p>');
+    '<div class="medcard" id="med-'+esc(m.id)+'"><div class="medhead"><div><b style="font-size:18px">'+esc(m.name)+'</b><div class="note">'+esc(m.dose||'Sin dosis')+' · '+esc(KIND[m.kind]||'')+(m.notes?' · '+esc(m.notes):'')+'</div></div>'+
+    '<div class="row"><button class="ghost sm" data-edit="'+esc(m.id)+'">Editar</button><button class="ghost sm" data-mdel="'+esc(m.id)+'">Quitar</button></div></div>'+
+    '<div style="margin-top:10px">'+(m.sched.length ? m.sched.map(s =>
+      '<div class="sched"><div><span class="hr">'+esc(s.time)+'</span> <span class="note">'+esc(s.dose||m.dose||'')+(s.note?' · '+esc(s.note):'')+'</span></div><button class="ghost sm" data-sdel="'+esc(m.id)+'|'+esc(s.id)+'">Quitar</button></div>').join('')
+      : '<p class="note" style="margin:0">Sin horarios todavía. Agrega el primero:</p>')+'</div>'+
+    '<form class="addsched" data-addsched="'+esc(m.id)+'"><div><label>Hora</label><input type="time" name="time" required></div><div><label>Dosis (opcional)</label><input name="dose" maxlength="30" placeholder="'+esc(m.dose||'Ej. 1 tableta')+'"></div><button type="submit">+ Horario</button><input name="note" type="hidden"></form></div>').join('')
+    : '<p class="note">Todavía no agregas medicamentos. Usa el formulario de abajo.</p>');
 }
 
 /* ---------- Gráficas ---------- */
@@ -741,12 +788,17 @@ document.addEventListener('click', async e => {
   }
   const ed = e.target.closest('[data-edit]');
   if (ed){ const m = S.meds.find(x=>x.id===ed.dataset.edit); if (!m) return;
-    $('#mId').value = m.id; $('#mName').value = m.name; $('#mDose').value = m.dose||''; $('#mTimes').value = m.times||''; $('#mKind').value = m.kind||'oral'; $('#mNotes').value = m.notes||'';
+    $('#mId').value = m.id; $('#mName').value = m.name; $('#mDose').value = m.dose||''; $('#mKind').value = m.kind||'oral'; $('#mNotes').value = m.notes||'';
     $('#medFormT').textContent = 'Editar medicamento'; $('#mCancel').style.display = ''; $('#mName').focus(); }
   const md = e.target.closest('[data-mdel]');
   if (md){
     if (md.dataset.armed){ S.meds = S.meds.filter(x=>x.id!==md.dataset.mdel); renderAll(); await save('meds',{list:S.meds}); }
     else { md.dataset.armed = 1; md.textContent = '¿Quitar?'; md.classList.add('danger'); }
+  }
+  const sd = e.target.closest('[data-sdel]');
+  if (sd){
+    if (sd.dataset.armed){ const [mid, sid] = sd.dataset.sdel.split('|'); const m = S.meds.find(x=>x.id===mid); if (m){ m.sched = m.sched.filter(s=>s.id!==sid); renderAll(); await save('meds',{list:S.meds}); } }
+    else { sd.dataset.armed = 1; sd.textContent = '¿Quitar?'; sd.classList.add('danger'); }
   }
   const wd = e.target.closest('[data-wdel]');
   if (wd){
@@ -762,14 +814,28 @@ document.addEventListener('change', async e => {
     if (tk.checked) day.taken[tk.dataset.take] = Date.now(); else delete day.taken[tk.dataset.take];
     renderHome(); await save('d-'+k, day); }
 });
+document.addEventListener('submit', async e => {
+  const f = e.target.closest('[data-addsched]'); if (!f) return;
+  e.preventDefault();
+  const m = S.meds.find(x=>x.id===f.dataset.addsched); if (!m) return;
+  const time = f.time.value; if (!/^\d{2}:\d{2}$/.test(time)) return toast('Elige una hora');
+  if (m.sched.some(s=>s.time===time)) return toast('Ese horario ya existe');
+  m.sched.push({id:'s'+Date.now().toString(36), time, dose:f.dose.value.trim(), note:''});
+  m.sched.sort((a,b)=>a.time.localeCompare(b.time));
+  renderAll(); toast('Horario agregado: '+time);
+  await save('meds', {list:S.meds});
+});
 const resetMed = () => { $('#fMed').reset(); $('#mId').value=''; $('#medFormT').textContent='Agregar medicamento'; $('#mCancel').style.display='none'; };
 $('#mCancel').addEventListener('click', resetMed);
 $('#fMed').addEventListener('submit', async e => {
   e.preventDefault();
-  const m = {id: $('#mId').value || 'm'+Date.now().toString(36), name:$('#mName').value.trim(), dose:$('#mDose').value.trim(), times:$('#mTimes').value.trim(), kind:$('#mKind').value, notes:$('#mNotes').value.trim()};
+  const id = $('#mId').value || 'm'+Date.now().toString(36), prev = S.meds.find(x=>x.id===id);
+  const m = {id, name:$('#mName').value.trim(), dose:$('#mDose').value.trim(), kind:$('#mKind').value, notes:$('#mNotes').value.trim(), sched: prev ? prev.sched : []};
   if (!m.name) return;
   const i = S.meds.findIndex(x=>x.id===m.id); if (i>=0) S.meds[i] = m; else S.meds.push(m);
-  resetMed(); renderAll(); toast('Medicamento guardado');
+  resetMed(); renderAll();
+  toast(prev ? 'Medicamento actualizado' : 'Listo, ahora agrégale sus horarios');
+  if (!prev){ const c = document.getElementById('med-'+id); if (c){ c.scrollIntoView({behavior:'smooth', block:'center'}); setTimeout(()=>{ const t = c.querySelector('input[type=time]'); t && t.focus(); }, 400); } }
   await save('meds', {list:S.meds});
 });
 
@@ -826,7 +892,7 @@ $('#copyRep').addEventListener('click', async () => {
   if (!rs.length) return toast('No hay lecturas en los últimos 14 días');
   const a = avg(rs), tir = rs.filter(r=>r.v>=70&&r.v<=180).length/rs.length*100;
   const byCtx = Object.keys(CTX).map(c=>{ const x = rs.filter(r=>r.c===c); return x.length ? '- '+CTX[c]+': '+Math.round(avg(x))+' mg/dL ('+x.length+' lecturas)' : ''; }).filter(Boolean);
-  const txt = ['Reporte de glucosa · últimos 14 días','Promedio: '+Math.round(a)+' mg/dL','Tiempo en rango 70–180: '+Math.round(tir)+' %','Lecturas bajo 70: '+rs.filter(r=>r.v<70).length,'Lecturas sobre 250: '+rs.filter(r=>r.v>250).length,'Mínima: '+Math.min(...rs.map(r=>r.v))+' · Máxima: '+Math.max(...rs.map(r=>r.v)),'Por momento:',...byCtx,'Medicamentos: '+(S.meds.map(m=>m.name+' '+(m.dose||'')+' '+(m.times||'')).join('; ')||'ninguno registrado')].join('\n');
+  const txt = ['Reporte de glucosa · últimos 14 días','Promedio: '+Math.round(a)+' mg/dL','Tiempo en rango 70–180: '+Math.round(tir)+' %','Lecturas bajo 70: '+rs.filter(r=>r.v<70).length,'Lecturas sobre 250: '+rs.filter(r=>r.v>250).length,'Mínima: '+Math.min(...rs.map(r=>r.v))+' · Máxima: '+Math.max(...rs.map(r=>r.v)),'Por momento:',...byCtx,'Medicamentos: '+(S.meds.map(m=>m.name+' '+(m.dose||'')+(m.sched.length?' ('+m.sched.map(s=>s.time+(s.dose?' '+s.dose:'')).join(', ')+')':'')).join('; ')||'ninguno registrado')].join('\n');
   try{ await navigator.clipboard.writeText(txt); toast('Reporte copiado'); }catch(err){ toast('No se pudo copiar en este navegador'); }
 });
 
